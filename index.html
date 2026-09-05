@@ -1,0 +1,3257 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>内容审核管理平台</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: #f0f2f5;
+            color: #333;
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* 侧边栏 */
+        .sidebar {
+            width: 240px;
+            background: linear-gradient(180deg, #1a2332 0%, #2c3e50 100%);
+            color: #fff;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            transition: all 0.3s;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            text-align: center;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .sidebar-header h1 {
+            font-size: 20px;
+            font-weight: 600;
+            background: linear-gradient(90deg, #4facfe 0%, #00f2fe 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .sidebar-header p {
+            font-size: 12px;
+            color: rgba(255,255,255,0.5);
+            margin-top: 5px;
+        }
+
+        .sidebar-menu {
+            padding: 20px 0;
+        }
+
+        .menu-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 20px;
+            color: rgba(255,255,255,0.7);
+            cursor: pointer;
+            transition: all 0.3s;
+            border-left: 3px solid transparent;
+        }
+
+        .menu-item:hover {
+            background: rgba(255,255,255,0.05);
+            color: #fff;
+        }
+
+        .menu-item.active {
+            background: rgba(79, 172, 254, 0.15);
+            color: #4facfe;
+            border-left-color: #4facfe;
+        }
+
+        .menu-icon {
+            width: 20px;
+            height: 20px;
+            margin-right: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .menu-badge {
+            margin-left: auto;
+            background: #ff4757;
+            color: #fff;
+            font-size: 11px;
+            padding: 2px 8px;
+            border-radius: 10px;
+        }
+
+        /* 主内容区 */
+        .main-content {
+            margin-left: 240px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* 顶部导航 */
+        .topnav {
+            height: 64px;
+            background: #fff;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 30px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .topnav-left {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .breadcrumb {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .breadcrumb span {
+            color: #1890ff;
+            font-weight: 500;
+        }
+
+        .search-box {
+            position: relative;
+        }
+
+        .search-box input {
+            width: 300px;
+            padding: 8px 15px 8px 40px;
+            border: 1px solid #e8e8e8;
+            border-radius: 20px;
+            outline: none;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .search-box input:focus {
+            border-color: #4facfe;
+            box-shadow: 0 0 0 2px rgba(79, 172, 254, 0.1);
+        }
+
+        .search-box::before {
+            content: "🔍";
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 14px;
+        }
+
+        .topnav-right {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .notification-icon {
+            position: relative;
+            cursor: pointer;
+            font-size: 20px;
+            padding: 5px;
+        }
+
+        .notification-icon::after {
+            content: "5";
+            position: absolute;
+            top: 0;
+            right: 0;
+            background: #ff4757;
+            color: #fff;
+            font-size: 10px;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            padding: 5px 10px;
+            border-radius: 20px;
+            transition: all 0.3s;
+        }
+
+        .user-info:hover {
+            background: #f5f5f5;
+        }
+
+        .avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .user-name {
+            font-size: 14px;
+            color: #333;
+            font-weight: 500;
+        }
+
+        .user-role {
+            font-size: 12px;
+            color: #999;
+        }
+
+        /* 内容区域 */
+        .content-wrapper {
+            padding: 24px 30px;
+            flex: 1;
+        }
+
+        /* 视图切换 */
+        .main-view {
+            display: none;
+            animation: fadeIn 0.3s;
+        }
+        .main-view.active {
+            display: block;
+        }
+
+        /* 统计卡片 */
+        .stats-cards {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            background: #fff;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+            transition: all 0.3s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+        }
+
+        .stat-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 15px;
+        }
+
+        .stat-card-title {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .stat-card-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .stat-card-icon.blue {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+
+        .stat-card-icon.orange {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+        }
+
+        .stat-card-icon.green {
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+        }
+
+        .stat-card-icon.red {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+        }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .stat-change {
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .stat-change.up {
+            color: #52c41a;
+        }
+
+        .stat-change.down {
+            color: #ff4757;
+        }
+
+        /* 筛选区域 */
+        .filter-section {
+            background: #fff;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+        }
+
+        .filter-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            align-items: center;
+        }
+
+        .filter-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .filter-item label {
+            font-size: 14px;
+            color: #666;
+            white-space: nowrap;
+        }
+
+        .filter-item select,
+        .filter-item input {
+            padding: 8px 12px;
+            border: 1px solid #e8e8e8;
+            border-radius: 6px;
+            font-size: 14px;
+            outline: none;
+            transition: all 0.3s;
+            min-width: 140px;
+        }
+
+        .filter-item select:focus,
+        .filter-item input:focus {
+            border-color: #4facfe;
+            box-shadow: 0 0 0 2px rgba(79, 172, 254, 0.1);
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            font-weight: 500;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: #fff;
+        }
+
+        .btn-primary:hover {
+            box-shadow: 0 4px 12px rgba(79, 172, 254, 0.4);
+            transform: translateY(-1px);
+        }
+
+        .btn-default {
+            background: #fff;
+            color: #666;
+            border: 1px solid #e8e8e8;
+        }
+
+        .btn-default:hover {
+            border-color: #4facfe;
+            color: #4facfe;
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #52c41a 0%, #73d13d 100%);
+            color: #fff;
+        }
+
+        .btn-success:hover {
+            box-shadow: 0 4px 12px rgba(82, 196, 26, 0.4);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #ff4757 0%, #ff6b81 100%);
+            color: #fff;
+        }
+
+        .btn-danger:hover {
+            box-shadow: 0 4px 12px rgba(255, 71, 87, 0.4);
+        }
+
+        .btn-sm {
+            padding: 5px 12px;
+            font-size: 13px;
+        }
+
+        .filter-actions {
+            margin-left: auto;
+            display: flex;
+            gap: 10px;
+        }
+
+        /* 表格区域 */
+        .table-section {
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+            overflow: hidden;
+        }
+
+        .table-header {
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .table-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .table-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead {
+            background: #fafafa;
+        }
+
+        th {
+            padding: 14px 16px;
+            text-align: left;
+            font-size: 13px;
+            font-weight: 600;
+            color: #666;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        td {
+            padding: 14px 16px;
+            font-size: 14px;
+            color: #333;
+            border-bottom: 1px solid #f5f5f5;
+        }
+
+        tbody tr {
+            transition: all 0.3s;
+        }
+
+        tbody tr:hover {
+            background: #f8faff;
+        }
+
+        tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .content-preview {
+            max-width: 300px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            cursor: pointer;
+            color: #1890ff;
+        }
+
+        .content-preview:hover {
+            text-decoration: underline;
+        }
+
+        .author-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .author-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .author-name {
+            font-size: 14px;
+            color: #333;
+        }
+
+        .author-id {
+            font-size: 12px;
+            color: #999;
+        }
+
+        .status-tag {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .status-pending {
+            background: #fff7e6;
+            color: #fa8c16;
+        }
+
+        .status-approved {
+            background: #f6ffed;
+            color: #52c41a;
+        }
+
+        .status-rejected {
+            background: #fff1f0;
+            color: #ff4757;
+        }
+
+        .status-reviewing {
+            background: #e6f7ff;
+            color: #1890ff;
+        }
+
+        .type-tag {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            background: #f0f5ff;
+            color: #2f54eb;
+        }
+
+        .row-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .action-link {
+            color: #1890ff;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.3s;
+        }
+
+        .action-link:hover {
+            text-decoration: underline;
+        }
+
+        .action-link.approve {
+            color: #52c41a;
+        }
+
+        .action-link.reject {
+            color: #ff4757;
+        }
+
+        /* 分页 */
+        .pagination {
+            padding: 20px;
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            gap: 8px;
+            border-top: 1px solid #f0f0f0;
+        }
+
+        .pagination-info {
+            margin-right: auto;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .page-btn {
+            min-width: 32px;
+            height: 32px;
+            padding: 0 8px;
+            border: 1px solid #e8e8e8;
+            background: #fff;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            color: #666;
+            transition: all 0.3s;
+        }
+
+        .page-btn:hover:not(:disabled) {
+            border-color: #4facfe;
+            color: #4facfe;
+        }
+
+        .page-btn.active {
+            background: #4facfe;
+            color: #fff;
+            border-color: #4facfe;
+        }
+
+        .page-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* 弹窗 */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            animation: fadeIn 0.3s;
+        }
+
+        .modal-overlay.show {
+            display: flex;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .modal {
+            background: #fff;
+            border-radius: 12px;
+            width: 640px;
+            max-width: 90vw;
+            max-height: 90vh;
+            overflow-y: auto;
+            animation: slideUp 0.3s;
+        }
+
+        .modal-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .modal-close {
+            width: 32px;
+            height: 32px;
+            border: none;
+            background: #f5f5f5;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 18px;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            background: #e8e8e8;
+        }
+
+        .modal-body {
+            padding: 24px;
+        }
+
+        .detail-section {
+            margin-bottom: 20px;
+        }
+
+        .detail-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .detail-label {
+            font-size: 13px;
+            color: #999;
+            margin-bottom: 8px;
+        }
+
+        .detail-value {
+            font-size: 14px;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .detail-content {
+            background: #fafafa;
+            padding: 16px;
+            border-radius: 8px;
+            line-height: 1.8;
+        }
+
+        .detail-images {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+
+        .detail-images img {
+            width: 100%;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 6px;
+        }
+
+        .reject-form {
+            margin-top: 10px;
+        }
+
+        .reject-form textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #e8e8e8;
+            border-radius: 6px;
+            font-size: 14px;
+            outline: none;
+            resize: vertical;
+            min-height: 80px;
+            transition: all 0.3s;
+        }
+
+        .reject-form textarea:focus {
+            border-color: #ff4757;
+            box-shadow: 0 0 0 2px rgba(255, 71, 87, 0.1);
+        }
+
+        .reject-reasons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .reason-tag {
+            padding: 5px 12px;
+            background: #f5f5f5;
+            border-radius: 15px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 1px solid transparent;
+        }
+
+        .reason-tag:hover {
+            background: #fff1f0;
+            color: #ff4757;
+        }
+
+        .reason-tag.active {
+            background: #fff1f0;
+            color: #ff4757;
+            border-color: #ff4757;
+        }
+
+        .modal-footer {
+            padding: 16px 24px;
+            border-top: 1px solid #f0f0f0;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        /* Toast 提示 */
+        .toast-container {
+            position: fixed;
+            top: 80px;
+            right: 30px;
+            z-index: 2000;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .toast {
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            color: #fff;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            animation: slideInRight 0.3s;
+            min-width: 200px;
+        }
+
+        @keyframes slideInRight {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        .toast.success {
+            background: linear-gradient(135deg, #52c41a 0%, #73d13d 100%);
+        }
+
+        .toast.error {
+            background: linear-gradient(135deg, #ff4757 0%, #ff6b81 100%);
+        }
+
+        .toast.info {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+
+        .toast.warning {
+            background: linear-gradient(135deg, #fa8c16 0%, #ffc53d 100%);
+        }
+
+        /* 响应式 */
+        @media (max-width: 1200px) {
+            .stats-cards {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                z-index: 200;
+            }
+
+            .sidebar.show {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .search-box input {
+                width: 150px;
+            }
+
+            .stats-cards {
+                grid-template-columns: 1fr;
+            }
+
+            .filter-row {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .filter-actions {
+                margin-left: 0;
+            }
+
+            .modal {
+                width: 95vw;
+            }
+        }
+
+        /* ============ 新状态标签 ============ */
+        .status-withdrawn { background: #f5f5f5 !important; color: #888 !important; }
+        .status-re-reviewing { background: #e6f7ff !important; color: #2f54eb !important; border: 1px solid #adc6ff; }
+        .status-rejected_final { background: #ffe8e8 !important; color: #d32f2f !important; border: 1px solid #ffb3b3; }
+
+        /* ============ 登录/注册罩层 ============ */
+        .admin-auth-page {
+            position: fixed; inset: 0; z-index: 500;
+            background: linear-gradient(135deg, #1a2332 0%, #2c3e50 100%);
+            display: flex; align-items: center; justify-content: center;
+            padding: 20px;
+        }
+        .admin-auth-page.hide { display: none; }
+        .admin-auth-card {
+            background: #fff; border-radius: 14px; width: 100%; max-width: 420px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3); overflow: hidden;
+            animation: slideUp 0.5s;
+        }
+        .admin-auth-header {
+            padding: 26px 30px; text-align: center; color: #fff;
+            background: linear-gradient(135deg, #1a2332 0%, #34495e 60%, #4facfe 100%);
+        }
+        .admin-auth-header .logo { font-size: 36px; margin-bottom: 6px; }
+        .admin-auth-header h1 { font-size: 20px; font-weight: 600; margin-bottom: 4px; }
+        .admin-auth-header p { font-size: 12px; opacity: 0.8; }
+        .admin-auth-tabs { display: flex; border-bottom: 1px solid #f0f0f0; }
+        .admin-auth-tab {
+            flex: 1; padding: 12px; text-align: center; font-size: 14px;
+            font-weight: 500; color: #999; cursor: pointer;
+            border-bottom: 2px solid transparent; transition: all 0.3s;
+        }
+        .admin-auth-tab.active { color: #4facfe; border-bottom-color: #4facfe; }
+        .admin-auth-body { padding: 22px 26px 26px; }
+        .admin-form { display: none; }
+        .admin-form.active { display: block; animation: fadeIn 0.3s; }
+        .admin-form-group { margin-bottom: 15px; }
+        .admin-form-group label {
+            display: block; font-size: 13px; color: #666;
+            margin-bottom: 5px; font-weight: 500;
+        }
+        .admin-form-group input, .admin-form-group select, .admin-form-group textarea {
+            width: 100%; padding: 10px 12px; border: 1px solid #e0e0e0;
+            border-radius: 6px; font-size: 14px; outline: none; transition: all 0.3s;
+        }
+        .admin-form-group input:focus, .admin-form-group select:focus {
+            border-color: #4facfe; box-shadow: 0 0 0 2px rgba(79, 172, 254, 0.12);
+        }
+        .admin-form-error { color: #ff4757; font-size: 12px; margin-top: 3px; display: none; }
+        .admin-form-error.show { display: block; }
+        .admin-auth-btn {
+            width: 100%; padding: 11px; border: none; border-radius: 6px;
+            background: linear-gradient(135deg, #4facfe 0%, #00a8ff 100%);
+            color: #fff; font-size: 15px; font-weight: 600; cursor: pointer;
+            transition: all 0.3s;
+        }
+        .admin-auth-btn:hover { box-shadow: 0 6px 18px rgba(79,172,254,0.4); transform: translateY(-1px); }
+        .admin-auth-footer {
+            padding: 12px 26px 20px; text-align: center; font-size: 12px; color: #999;
+            border-top: 1px solid #f5f5f5;
+        }
+        .admin-auth-footer a { color: #4facfe; cursor: pointer; }
+        .admin-to-login {
+            margin-top: 12px; text-align: center; font-size: 13px; color: #666;
+        }
+        .admin-to-login a { color: #4facfe; cursor: pointer; font-weight: 500; }
+        .pwd-row { position: relative; }
+        .pwd-toggle {
+            position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+            cursor: pointer; color: #999; font-size: 14px; user-select: none;
+        }
+        .admin-role-hint {
+            background: #fffbe6; border-left: 3px solid #faad14; padding: 10px 12px;
+            border-radius: 4px; font-size: 12px; color: #8c6d1f; margin-bottom: 14px;
+        }
+        .superadmin-hint {
+            background: #e6f7ff; border-left: 3px solid #1890ff; padding: 10px 12px;
+            border-radius: 4px; font-size: 12px; color: #0050b3; margin-bottom: 14px;
+        }
+        @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    </style>
+</head>
+<body>
+    <!-- ========== 登录/注册罩层 ========== -->
+    <div class="admin-auth-page" id="adminAuthPage">
+        <div class="admin-auth-card">
+            <div class="admin-auth-header">
+                <div class="logo">🔐</div>
+                <h1>审核管理后台</h1>
+                <p>管理员登录 · 保护内容安全</p>
+            </div>
+            <div class="admin-auth-tabs">
+                <div class="admin-auth-tab active" id="admTabLogin" onclick="admSwitchTab('login')">登录</div>
+                <div class="admin-auth-tab" id="admTabReg" onclick="admSwitchTab('register')">注册</div>
+            </div>
+            <div class="admin-auth-body">
+                <!-- 登录表单 -->
+                <form class="admin-form active" id="admLoginForm" onsubmit="admHandleLogin(event)">
+                    <div class="admin-form-group">
+                        <label>用户名 / 邮箱</label>
+                        <input type="text" id="admLoginAccount" placeholder="请输入管理员账号" required>
+                    </div>
+                    <div class="admin-form-group">
+                        <label>密码</label>
+                        <div class="pwd-row">
+                            <input type="password" id="admLoginPwd" placeholder="请输入密码" required>
+                            <span class="pwd-toggle" onclick="admTogglePwd(this)">👁️</span>
+                        </div>
+                    </div>
+                    <div class="admin-form-error" id="admLoginError"></div>
+                    <button type="submit" class="admin-auth-btn">登 录</button>
+                    <div class="admin-to-login">
+                        还不是管理员？<a onclick="admSwitchTab('register')">申请注册</a>
+                    </div>
+                </form>
+
+                <!-- 注册表单 -->
+                <form class="admin-form" id="admRegForm" onsubmit="admHandleRegister(event)">
+                    <div class="admin-role-hint">
+                        ⚠️ 注册后需等待 <b>超级管理员</b> 审核通过才可登录，默认角色为 <b>普通管理员</b>。
+                    </div>
+                    <div class="admin-form-group">
+                        <label>用户名 *</label>
+                        <input type="text" id="admRegName" placeholder="3-16 位中英数字" minlength="3" maxlength="16" required>
+                        <div class="admin-form-error" id="admRegNameErr"></div>
+                    </div>
+                    <div class="admin-form-group">
+                        <label>邮箱 *</label>
+                        <input type="email" id="admRegEmail" placeholder="用于接收审核通知" required>
+                        <div class="admin-form-error" id="admRegEmailErr"></div>
+                    </div>
+                    <div class="admin-form-group">
+                        <label>真实姓名</label>
+                        <input type="text" id="admRegRealname" placeholder="选填，便于管理员识别">
+                    </div>
+                    <div class="admin-form-group">
+                        <label>密码 *</label>
+                        <div class="pwd-row">
+                            <input type="password" id="admRegPwd" placeholder="至少 6 位" minlength="6" required>
+                            <span class="pwd-toggle" onclick="admTogglePwd(this)">👁️</span>
+                        </div>
+                    </div>
+                    <div class="admin-form-group">
+                        <label>确认密码 *</label>
+                        <div class="pwd-row">
+                            <input type="password" id="admRegPwd2" placeholder="再次输入" minlength="6" required>
+                            <span class="pwd-toggle" onclick="admTogglePwd(this)">👁️</span>
+                        </div>
+                        <div class="admin-form-error" id="admRegPwdErr"></div>
+                    </div>
+                    <button type="submit" class="admin-auth-btn">提交注册申请</button>
+                    <div class="admin-to-login">
+                        已有账号？<a onclick="admSwitchTab('login')">立即登录</a>
+                    </div>
+                </form>
+            </div>
+            <div class="admin-auth-footer">
+                <a onclick="window.open('user-portal.html','_blank')">← 返回用户端</a> · <a onclick="alert('请联系系统超级管理员重置密码')">忘记密码？</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- 侧边栏 -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <h1>审核管理平台</h1>
+            <p>Content Review System</p>
+        </div>
+        <nav class="sidebar-menu">
+            <div class="menu-item active" data-view="viewReview">
+                <div class="menu-icon">📋</div>
+                <span>内容审核</span>
+                <span class="menu-badge">12</span>
+            </div>
+            <div class="menu-item" data-view="viewUserApp">
+                <div class="menu-icon">👤</div>
+                <span>用户申请审核</span>
+                <span class="menu-badge" id="uaSideBadge" style="display:none;">0</span>
+            </div>
+            <div class="menu-item" id="adminMgrMenuItem" data-view="viewAdminMgr" style="display:none;">
+                <div class="menu-icon">🛡️</div>
+                <span>管理员审核</span>
+                <span class="menu-badge" id="admMgrBadge" style="display:none;">0</span>
+            </div>
+        </nav>
+    </aside>
+
+    <!-- 主内容区 -->
+    <main class="main-content">
+        <!-- 顶部导航 -->
+        <header class="topnav">
+            <div class="topnav-left">
+                <div class="breadcrumb">
+                    首页 / <span id="breadcrumbText">内容审核</span>
+                </div>
+            </div>
+            <div class="topnav-right">
+                <div class="user-info" style="gap:14px;">
+                    <div class="avatar" id="admTopAvatar">张</div>
+                    <div>
+                        <div class="user-name" id="admTopName">未登录</div>
+                        <div class="user-role" id="admTopRole">请先登录</div>
+                    </div>
+                    <button class="btn btn-default btn-sm" id="admLogoutBtn" onclick="admLogout()" style="display:none;">退出</button>
+                </div>
+            </div>
+        </header>
+
+        <!-- 内容区域 -->
+        <div class="content-wrapper">
+
+            <!-- ============== 视图1：内容审核 ============== -->
+            <div class="main-view active" id="viewReview">
+            <!-- 统计卡片 -->
+            <div class="stats-cards">
+                <div class="stat-card">
+                    <div class="stat-card-header">
+                        <div class="stat-card-title">待审核数量</div>
+                        <div class="stat-card-icon blue">📋</div>
+                    </div>
+                    <div class="stat-value" id="statPending">128</div>
+                    <div class="stat-change up">↑ 12% 较昨日</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-card-header">
+                        <div class="stat-card-title">今日审核</div>
+                        <div class="stat-card-icon orange">✅</div>
+                    </div>
+                    <div class="stat-value" id="statToday">56</div>
+                    <div class="stat-change up">↑ 8% 较昨日</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-card-header">
+                        <div class="stat-card-title">审核通过</div>
+                        <div class="stat-card-icon green">✔️</div>
+                    </div>
+                    <div class="stat-value" id="statApproved">1,247</div>
+                    <div class="stat-change up">↑ 15% 较昨日</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-card-header">
+                        <div class="stat-card-title">审核拒绝</div>
+                        <div class="stat-card-icon red">❌</div>
+                    </div>
+                    <div class="stat-value" id="statRejected">89</div>
+                    <div class="stat-change down">↓ 5% 较昨日</div>
+                </div>
+            </div>
+
+            <!-- 筛选区域 -->
+            <div class="filter-section">
+                <div class="filter-row">
+                    <div class="filter-item">
+                        <label>内容类型:</label>
+                        <select id="filterType">
+                            <option value="">全部类型</option>
+                            <option value="文章">文章</option>
+                            <option value="图片">图片</option>
+                            <option value="视频">视频</option>
+                            <option value="音频">音频</option>
+                        </select>
+                    </div>
+                    <div class="filter-item">
+                        <label>审核状态:</label>
+                        <select id="filterStatus">
+                            <option value="">全部状态</option>
+                            <option value="pending">待审核</option>
+                            <option value="reviewing">审核中</option>
+                            <option value="approved">已通过</option>
+                            <option value="rejected">已拒绝</option>
+                        </select>
+                    </div>
+                    <div class="filter-item">
+                        <label>提交时间:</label>
+                        <input type="date" id="filterDate">
+                    </div>
+                    <div class="filter-item">
+                        <label>优先级:</label>
+                        <select id="filterPriority">
+                            <option value="">全部优先级</option>
+                            <option value="high">高优先级</option>
+                            <option value="medium">中优先级</option>
+                            <option value="low">低优先级</option>
+                        </select>
+                    </div>
+                    <div class="filter-actions">
+                        <button class="btn btn-default" onclick="resetFilters()">重置</button>
+                        <button class="btn btn-primary" onclick="applyFilters()">🔍 筛选</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 表格区域 -->
+            <div class="table-section">
+                <div class="table-header">
+                    <div class="table-title">内容审核列表</div>
+                    <div class="table-actions">
+                        <button class="btn btn-success btn-sm" onclick="batchApprove()">✅ 批量通过</button>
+                        <button class="btn btn-danger btn-sm" onclick="batchReject()">❌ 批量拒绝</button>
+                    </div>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width: 40px;"><input type="checkbox" id="selectAll" onchange="toggleSelectAll()"></th>
+                            <th style="width: 80px;">ID</th>
+                            <th>内容预览</th>
+                            <th>作者</th>
+                            <th style="width: 90px;">类型</th>
+                            <th style="width: 100px;">状态</th>
+                            <th style="width: 110px;">提交时间</th>
+                            <th style="width: 180px;">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody">
+                        <!-- 动态渲染 -->
+                    </tbody>
+                </table>
+                <div class="pagination">
+                    <div class="pagination-info" id="paginationInfo">共 0 条记录</div>
+                    <button class="page-btn" id="prevBtn" onclick="prevPage()" disabled>上一页</button>
+                    <div id="pageNumbers"></div>
+                    <button class="page-btn" id="nextBtn" onclick="nextPage()">下一页</button>
+                </div>
+            </div>
+            </div>
+
+            <!-- ============== 视图2：用户申请审核 ============== -->
+            <div class="main-view" id="viewUserApp">
+                <!-- 统计卡片 -->
+                <div class="stats-cards">
+                    <div class="stat-card">
+                        <div class="stat-card-header">
+                            <div class="stat-card-title">待处理申请</div>
+                            <div class="stat-card-icon orange">📝</div>
+                        </div>
+                        <div class="stat-value" id="uaStatPending">0</div>
+                        <div class="stat-change up">同步自用户端</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-card-header">
+                            <div class="stat-card-title">审核中</div>
+                            <div class="stat-card-icon blue">🔍</div>
+                        </div>
+                        <div class="stat-value" id="uaStatReviewing">0</div>
+                        <div class="stat-change info">处理中</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-card-header">
+                            <div class="stat-card-title">已通过</div>
+                            <div class="stat-card-icon green">✔️</div>
+                        </div>
+                        <div class="stat-value" id="uaStatApproved">0</div>
+                        <div class="stat-change up">累计通过</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-card-header">
+                            <div class="stat-card-title">已拒绝</div>
+                            <div class="stat-card-icon red">❌</div>
+                        </div>
+                        <div class="stat-value" id="uaStatRejected">0</div>
+                        <div class="stat-change down">累计拒绝</div>
+                    </div>
+                </div>
+
+                <!-- 筛选 -->
+                <div class="filter-section">
+                    <div class="filter-row">
+                        <div class="filter-item">
+                            <label>申请类型:</label>
+                            <select id="uaFilterType">
+                                <option value="">全部类型</option>
+                                <option value="认证申请">认证申请</option>
+                                <option value="权限开通">权限开通</option>
+                                <option value="内容发布">内容发布</option>
+                                <option value="会员升级">会员升级</option>
+                                <option value="账号解封">账号解封</option>
+                                <option value="其他申请">其他申请</option>
+                            </select>
+                        </div>
+                        <div class="filter-item">
+                            <label>审核状态:</label>
+                            <select id="uaFilterStatus">
+                                <option value="">全部状态</option>
+                                <option value="pending">待审核</option>
+                                <option value="reviewing">审核中</option>
+                                <option value="approved">已通过</option>
+                                <option value="rejected">已拒绝</option>
+                            </select>
+                        </div>
+                        <div class="filter-item">
+                            <label>紧急程度:</label>
+                            <select id="uaFilterPriority">
+                                <option value="">全部</option>
+                                <option value="emergency">特急</option>
+                                <option value="urgent">加急</option>
+                                <option value="normal">普通</option>
+                            </select>
+                        </div>
+                        <div class="filter-item">
+                            <label>提交时间:</label>
+                            <input type="date" id="uaFilterDate">
+                        </div>
+                        <div class="filter-actions">
+                            <button class="btn btn-default" onclick="uaResetFilters()">重置</button>
+                            <button class="btn btn-primary" onclick="uaApplyFilters()">🔍 筛选</button>
+                            <button class="btn btn-default" onclick="uaRefresh()" title="从用户端同步最新数据">🔄 刷新</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 表格 -->
+                <div class="table-section">
+                    <div class="table-header">
+                        <div class="table-title">用户申请审核列表</div>
+                        <div class="table-actions">
+                            <button class="btn btn-success btn-sm" onclick="uaBatchApprove()">✅ 批量通过</button>
+                            <button class="btn btn-danger btn-sm" onclick="uaBatchReject()">❌ 批量拒绝</button>
+                        </div>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th style="width:40px;"><input type="checkbox" id="uaSelectAll" onchange="uaToggleSelectAll()"></th>
+                                <th>申请编号</th>
+                                <th>申请人</th>
+                                <th>类型</th>
+                                <th>申请标题</th>
+                                <th>紧急度</th>
+                                <th>状态</th>
+                                <th>提交时间</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="uaTableBody"></tbody>
+                    </table>
+                    <div class="pagination">
+                        <div class="pagination-info" id="uaPaginationInfo">共 0 条记录</div>
+                        <button class="page-btn" id="uaPrevBtn" onclick="uaPrevPage()" disabled>上一页</button>
+                        <div id="uaPageNumbers"></div>
+                        <button class="page-btn" id="uaNextBtn" onclick="uaNextPage()">下一页</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============== 视图3：管理员审核（仅超级管理员） ============== -->
+            <div class="main-view" id="viewAdminMgr">
+                <div class="stats-cards">
+                    <div class="stat-card">
+                        <div class="stat-card-header">
+                            <div class="stat-card-title">待审核注册</div>
+                            <div class="stat-card-icon orange">👥</div>
+                        </div>
+                        <div class="stat-value" id="amStatPending">0</div>
+                        <div class="stat-change info">需超管审核</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-card-header">
+                            <div class="stat-card-title">超级管理员</div>
+                            <div class="stat-card-icon red">👑</div>
+                        </div>
+                        <div class="stat-value" id="amStatSuper">0</div>
+                        <div class="stat-change up">最高权限</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-card-header">
+                            <div class="stat-card-title">普通管理员</div>
+                            <div class="stat-card-icon blue">🛡️</div>
+                        </div>
+                        <div class="stat-value" id="amStatAdmin">0</div>
+                        <div class="stat-change up">已激活</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-card-header">
+                            <div class="stat-card-title">已拒绝注册</div>
+                            <div class="stat-card-icon green">❌</div>
+                        </div>
+                        <div class="stat-value" id="amStatRejected">0</div>
+                        <div class="stat-change down">累计拒绝</div>
+                    </div>
+                </div>
+
+                <div class="filter-section">
+                    <div class="filter-row">
+                        <div class="filter-item">
+                            <label>账号状态:</label>
+                            <select id="amFilterStatus" onchange="amApplyFilter()">
+                                <option value="">全部</option>
+                                <option value="pending">待审核</option>
+                                <option value="active">已激活</option>
+                                <option value="rejected">已拒绝</option>
+                                <option value="disabled">已禁用</option>
+                            </select>
+                        </div>
+                        <div class="filter-item">
+                            <label>角色:</label>
+                            <select id="amFilterRole" onchange="amApplyFilter()">
+                                <option value="">全部角色</option>
+                                <option value="super_admin">超级管理员</option>
+                                <option value="admin">普通管理员</option>
+                            </select>
+                        </div>
+                        <div class="filter-item">
+                            <label>关键词:</label>
+                            <input type="text" id="amFilterKw" placeholder="用户名/邮箱/姓名" oninput="amApplyFilter()">
+                        </div>
+                        <div class="filter-actions">
+                            <button class="btn btn-default" onclick="amResetFilter()">重置</button>
+                            <button class="btn btn-primary" onclick="amLoadAll()">🔄 刷新</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="table-section">
+                    <div class="table-header">
+                        <div class="table-title">管理员账号列表</div>
+                        <div class="table-actions">
+                        </div>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>账号</th>
+                                <th>邮箱</th>
+                                <th>真实姓名</th>
+                                <th>角色</th>
+                                <th>状态</th>
+                                <th>注册时间</th>
+                                <th>审核时间</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="amTableBody"></tbody>
+                    </table>
+                    <div class="pagination">
+                        <div class="pagination-info" id="amPaginationInfo">共 0 条记录</div>
+                        <button class="page-btn" id="amPrevBtn" onclick="amPrevPage()" disabled>上一页</button>
+                        <div id="amPageNumbers"></div>
+                        <button class="page-btn" id="amNextBtn" onclick="amNextPage()">下一页</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- 详情弹窗 -->
+    <div class="modal-overlay" id="detailModal">
+        <div class="modal">
+            <div class="modal-header">
+                <div class="modal-title">内容详情</div>
+                <button class="modal-close" onclick="closeModal('detailModal')">✕</button>
+            </div>
+            <div class="modal-body" id="detailBody">
+                <!-- 动态渲染 -->
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-default" onclick="closeModal('detailModal')">关闭</button>
+                <button class="btn btn-danger" onclick="rejectFromDetail()">拒绝</button>
+                <button class="btn btn-success" onclick="approveFromDetail()">通过</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 拒绝弹窗 -->
+    <div class="modal-overlay" id="rejectModal">
+        <div class="modal" style="width: 480px;">
+            <div class="modal-header">
+                <div class="modal-title">拒绝原因</div>
+                <button class="modal-close" onclick="closeModal('rejectModal')">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="reject-form">
+                    <label class="detail-label">请输入拒绝原因：</label>
+                    <textarea id="rejectReason" placeholder="请详细说明拒绝原因..."></textarea>
+                    <div class="detail-label" style="margin-top: 16px;">快捷原因：</div>
+                    <div class="reject-reasons" id="rejectReasons">
+                        <span class="reason-tag" onclick="selectReason(this)">包含违规内容</span>
+                        <span class="reason-tag" onclick="selectReason(this)">涉嫌广告营销</span>
+                        <span class="reason-tag" onclick="selectReason(this)">内容质量低下</span>
+                        <span class="reason-tag" onclick="selectReason(this)">涉嫌抄袭搬运</span>
+                        <span class="reason-tag" onclick="selectReason(this)">图片/视频模糊</span>
+                        <span class="reason-tag" onclick="selectReason(this)">标题与内容不符</span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-default" onclick="closeModal('rejectModal')">取消</button>
+                <button class="btn btn-danger" onclick="confirmReject()">确认拒绝</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast 容器 -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script>
+        // 模拟数据
+        const avatarColors = [
+            'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+            'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+            'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
+            'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
+            'linear-gradient(135deg, #30cfd0 0%, #330867 100%)'
+        ];
+
+        const titles = [
+            '如何提高工作效率的10个实用技巧分享',
+            '2026年最值得关注的科技趋势预测分析报告',
+            '美食探店：市中心新开的日式拉面馆体验',
+            '旅行日记：云南大理三日游完整攻略',
+            '健身指南：在家也能练出好身材的方法',
+            '数码评测：最新款智能手机深度对比测试',
+            '教育心得：如何培养孩子的自主学习能力',
+            '职场经验：从实习生到部门主管的成长之路',
+            '生活妙招：厨房清洁的50个小技巧汇总',
+            '读书笔记：《思考，快与慢》精华内容摘录',
+            '摄影教程：手机也能拍出大片的构图技巧',
+            '理财规划：年轻人如何实现财务自由目标',
+            '健康养生：春季养生注意事项与饮食建议',
+            '家居装修：小户型空间利用设计案例分享',
+            '亲子互动：周末陪孩子玩的10个创意游戏'
+        ];
+
+        const authors = [
+            { name: '李明辉', id: 'U100234' },
+            { name: '王晓芳', id: 'U100567' },
+            { name: '张伟杰', id: 'U100890' },
+            { name: '刘诗雨', id: 'U100123' },
+            { name: '陈建国', id: 'U100456' },
+            { name: '杨美玲', id: 'U100789' },
+            { name: '赵志强', id: 'U100012' },
+            { name: '黄雅婷', id: 'U100345' }
+        ];
+
+        const types = ['文章', '图片', '视频', '音频'];
+        const statuses = ['pending', 'pending', 'pending', 'reviewing', 'approved', 'rejected'];
+        const statusTexts = {
+            pending: '待审核',
+            reviewing: '审核中',
+            approved: '已通过',
+            rejected: '已拒绝'
+        };
+        const priorities = ['high', 'medium', 'medium', 'low'];
+
+        // 生成模拟数据
+        let reviewData = [];
+        for (let i = 0; i < 48; i++) {
+            const author = authors[i % authors.length];
+            const date = new Date();
+            date.setDate(date.getDate() - Math.floor(Math.random() * 7));
+            date.setHours(Math.floor(Math.random() * 24), Math.floor(Math.random() * 60));
+            
+            reviewData.push({
+                id: 10000 + i,
+                title: titles[i % titles.length],
+                content: `这是一篇关于"${titles[i % titles.length]}"的详细内容。\n\n本文将从多个角度深入探讨这个话题，为读者提供全面的了解和实用的建议。\n\n第一部分：背景介绍\n在当今快节奏的社会中，这个话题越来越受到人们的关注。许多人都希望能够找到有效的方法来解决相关的问题。\n\n第二部分：核心要点\n1. 重要性分析\n2. 实施步骤详解\n3. 常见误区规避\n4. 成功案例分享\n\n第三部分：总结建议\n希望通过本文的分享，能够对大家有所帮助。如果您有任何问题或建议，欢迎在评论区留言讨论。`,
+                author: author,
+                type: types[i % types.length],
+                status: statuses[i % statuses.length],
+                priority: priorities[i % priorities.length],
+                submitTime: formatDate(date),
+                images: i % 3 === 0 ? 3 : (i % 3 === 1 ? 1 : 0),
+                views: Math.floor(Math.random() * 10000),
+                likes: Math.floor(Math.random() * 500)
+            });
+        }
+
+        // 状态管理
+        let currentPage = 1;
+        const pageSize = 10;
+        let filteredData = [...reviewData];
+        let currentDetailId = null;
+        let selectedIds = new Set();
+
+        // 工具函数
+        function formatDate(date) {
+            const pad = n => n.toString().padStart(2, '0');
+            return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}`;
+        }
+
+        function getAvatarColor(name) {
+            let hash = 0;
+            for (let i = 0; i < name.length; i++) {
+                hash = name.charCodeAt(i) + ((hash << 5) - hash);
+            }
+            return avatarColors[Math.abs(hash) % avatarColors.length];
+        }
+
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            const icons = { success: '✅', error: '❌', info: 'ℹ️', warning: '⚠️' };
+            toast.innerHTML = `<span>${icons[type] || 'ℹ️'}</span><span>${message}</span>`;
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateX(100%)';
+                toast.style.transition = 'all 0.3s';
+                setTimeout(() => toast.remove(), 300);
+            }, 2500);
+        }
+
+        // 渲染表格
+        function renderTable() {
+            const tbody = document.getElementById('tableBody');
+            const start = (currentPage - 1) * pageSize;
+            const end = start + pageSize;
+            const pageData = filteredData.slice(start, end);
+
+            if (pageData.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; padding: 60px; color: #999;">暂无数据</td></tr>`;
+            } else {
+                tbody.innerHTML = pageData.map(item => `
+                    <tr data-id="${item.id}">
+                        <td><input type="checkbox" class="row-checkbox" ${selectedIds.has(item.id) ? 'checked' : ''} onchange="toggleSelect(${item.id})"></td>
+                        <td>#${item.id}</td>
+                        <td>
+                            <div class="content-preview" onclick="showDetail(${item.id})" title="${item.title}">
+                                ${item.priority === 'high' ? '<span style="color:#ff4757;">🔥</span>' : ''}
+                                ${item.title}
+                            </div>
+                            ${item.images > 0 ? `<span style="font-size:12px;color:#999;margin-left:8px;">🖼️ ${item.images}张图</span>` : ''}
+                        </td>
+                        <td>
+                            <div class="author-info">
+                                <div class="author-avatar" style="background: ${getAvatarColor(item.author.name)}">
+                                    ${item.author.name.charAt(0)}
+                                </div>
+                                <div>
+                                    <div class="author-name">${item.author.name}</div>
+                                    <div class="author-id">${item.author.id}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td><span class="type-tag">${item.type}</span></td>
+                        <td><span class="status-tag status-${item.status}">${statusTexts[item.status]}</span></td>
+                        <td style="color:#666;font-size:13px;">${item.submitTime.split(' ')[0]}</td>
+                        <td>
+                            <div class="row-actions">
+                                <span class="action-link" onclick="showDetail(${item.id})">详情</span>
+                                ${item.status === 'pending' || item.status === 'reviewing' ? `
+                                    <span class="action-link approve" onclick="approveItem(${item.id})">通过</span>
+                                    <span class="action-link reject" onclick="openRejectModal(${item.id})">拒绝</span>
+                                ` : ''}
+                            </div>
+                        </td>
+                    </tr>
+                `).join('');
+            }
+
+            renderPagination();
+        }
+
+        // 渲染分页
+        function renderPagination() {
+            const total = filteredData.length;
+            const totalPages = Math.ceil(total / pageSize);
+            
+            document.getElementById('paginationInfo').textContent = `共 ${total} 条记录，第 ${currentPage}/${totalPages || 1} 页`;
+            document.getElementById('prevBtn').disabled = currentPage === 1;
+            document.getElementById('nextBtn').disabled = currentPage >= totalPages;
+
+            const pageNumbers = document.getElementById('pageNumbers');
+            let html = '';
+            
+            const maxShow = 5;
+            let startPage = Math.max(1, currentPage - Math.floor(maxShow / 2));
+            let endPage = Math.min(totalPages, startPage + maxShow - 1);
+            
+            if (endPage - startPage < maxShow - 1) {
+                startPage = Math.max(1, endPage - maxShow + 1);
+            }
+
+            if (startPage > 1) {
+                html += `<button class="page-btn" onclick="goToPage(1)">1</button>`;
+                if (startPage > 2) html += `<span style="padding: 0 5px;">...</span>`;
+            }
+
+            for (let i = startPage; i <= endPage; i++) {
+                html += `<button class="page-btn ${i === currentPage ? 'active' : ''}" onclick="goToPage(${i})">${i}</button>`;
+            }
+
+            if (endPage < totalPages) {
+                if (endPage < totalPages - 1) html += `<span style="padding: 0 5px;">...</span>`;
+                html += `<button class="page-btn" onclick="goToPage(${totalPages})">${totalPages}</button>`;
+            }
+
+            pageNumbers.innerHTML = html;
+        }
+
+        function goToPage(page) {
+            currentPage = page;
+            renderTable();
+        }
+
+        function prevPage() {
+            if (currentPage > 1) goToPage(currentPage - 1);
+        }
+
+        function nextPage() {
+            const totalPages = Math.ceil(filteredData.length / pageSize);
+            if (currentPage < totalPages) goToPage(currentPage + 1);
+        }
+
+        // 筛选功能
+        function applyFilters() {
+            const type = document.getElementById('filterType').value;
+            const status = document.getElementById('filterStatus').value;
+            const date = document.getElementById('filterDate').value;
+            const priority = document.getElementById('filterPriority').value;
+            const gs = document.getElementById('globalSearch');
+            const search = gs ? gs.value.toLowerCase().trim() : '';
+
+            filteredData = reviewData.filter(item => {
+                if (type && item.type !== type) return false;
+                if (status && item.status !== status) return false;
+                if (priority && item.priority !== priority) return false;
+                if (date && !item.submitTime.startsWith(date)) return false;
+                if (search) {
+                    const searchStr = `${item.title} ${item.id} ${item.author.name} ${item.author.id}`.toLowerCase();
+                    if (!searchStr.includes(search)) return false;
+                }
+                return true;
+            });
+
+            currentPage = 1;
+            renderTable();
+            showToast(`筛选完成，共 ${filteredData.length} 条结果`, 'info');
+        }
+
+        function resetFilters() {
+            document.getElementById('filterType').value = '';
+            document.getElementById('filterStatus').value = '';
+            document.getElementById('filterDate').value = '';
+            document.getElementById('filterPriority').value = '';
+            const gs = document.getElementById('globalSearch');
+            if (gs) gs.value = '';
+            filteredData = [...reviewData];
+            currentPage = 1;
+            renderTable();
+            showToast('已重置筛选条件', 'info');
+        }
+
+        // 全选
+        function toggleSelectAll() {
+            const isChecked = document.getElementById('selectAll').checked;
+            const start = (currentPage - 1) * pageSize;
+            const end = start + pageSize;
+            const pageData = filteredData.slice(start, end);
+            
+            if (isChecked) {
+                pageData.forEach(item => selectedIds.add(item.id));
+            } else {
+                pageData.forEach(item => selectedIds.delete(item.id));
+            }
+            renderTable();
+        }
+
+        function toggleSelect(id) {
+            if (selectedIds.has(id)) {
+                selectedIds.delete(id);
+            } else {
+                selectedIds.add(id);
+            }
+        }
+
+        // 审核操作
+        function approveItem(id) {
+            const item = reviewData.find(d => d.id === id);
+            if (item) {
+                item.status = 'approved';
+                renderTable();
+                updateStats();
+                showToast(`内容 #${id} 审核通过`, 'success');
+            }
+        }
+
+        function openRejectModal(id) {
+            currentDetailId = id;
+            document.getElementById('rejectReason').value = '';
+            document.querySelectorAll('.reason-tag').forEach(tag => tag.classList.remove('active'));
+            openModal('rejectModal');
+        }
+
+        function selectReason(tag) {
+            tag.classList.toggle('active');
+            const activeReasons = Array.from(document.querySelectorAll('.reason-tag.active'))
+                .map(t => t.textContent);
+            document.getElementById('rejectReason').value = activeReasons.join('；');
+        }
+
+        function confirmReject() {
+            const reason = document.getElementById('rejectReason').value.trim();
+            if (!reason) {
+                showToast('请填写拒绝原因', 'warning');
+                return;
+            }
+            if (currentDetailId) {
+                const item = reviewData.find(d => d.id === currentDetailId);
+                if (item) {
+                    item.status = 'rejected';
+                    renderTable();
+                    updateStats();
+                    showToast(`内容 #${currentDetailId} 已拒绝`, 'error');
+                }
+            }
+            closeModal('rejectModal');
+            closeModal('detailModal');
+        }
+
+        function rejectFromDetail() {
+            openRejectModal(currentDetailId);
+        }
+
+        function approveFromDetail() {
+            if (currentDetailId) {
+                approveItem(currentDetailId);
+                closeModal('detailModal');
+            }
+        }
+
+        // 批量操作
+        function batchApprove() {
+            if (selectedIds.size === 0) {
+                showToast('请先选择要操作的内容', 'warning');
+                return;
+            }
+            let count = 0;
+            selectedIds.forEach(id => {
+                const item = reviewData.find(d => d.id === id);
+                if (item && (item.status === 'pending' || item.status === 'reviewing')) {
+                    item.status = 'approved';
+                    count++;
+                }
+            });
+            selectedIds.clear();
+            renderTable();
+            updateStats();
+            showToast(`批量通过 ${count} 条内容`, 'success');
+        }
+
+        function batchReject() {
+            if (selectedIds.size === 0) {
+                showToast('请先选择要操作的内容', 'warning');
+                return;
+            }
+            currentDetailId = null;
+            document.getElementById('rejectReason').value = '';
+            document.querySelectorAll('.reason-tag').forEach(tag => tag.classList.remove('active'));
+            
+            // 修改确认按钮逻辑为批量拒绝
+            const confirmBtn = document.querySelector('#rejectModal .modal-footer .btn-danger');
+            confirmBtn.onclick = function() {
+                const reason = document.getElementById('rejectReason').value.trim();
+                if (!reason) {
+                    showToast('请填写拒绝原因', 'warning');
+                    return;
+                }
+                let count = 0;
+                selectedIds.forEach(id => {
+                    const item = reviewData.find(d => d.id === id);
+                    if (item && (item.status === 'pending' || item.status === 'reviewing')) {
+                        item.status = 'rejected';
+                        count++;
+                    }
+                });
+                selectedIds.clear();
+                renderTable();
+                updateStats();
+                showToast(`批量拒绝 ${count} 条内容`, 'error');
+                closeModal('rejectModal');
+                // 恢复单个拒绝逻辑
+                confirmBtn.onclick = confirmReject;
+            };
+            
+            openModal('rejectModal');
+        }
+
+        // 详情弹窗
+        function showDetail(id) {
+            currentDetailId = id;
+            const item = reviewData.find(d => d.id === id);
+            if (!item) return;
+
+            const body = document.getElementById('detailBody');
+            let imagesHtml = '';
+            if (item.images > 0) {
+                const prompts = ['自然风光山脉河流', '城市建筑夜景灯光', '美食料理摆盘拍摄', '人物肖像微笑表情', '科技产品细节特写'];
+                imagesHtml = `
+                    <div class="detail-section">
+                        <div class="detail-label">配图 (${item.images}张)：</div>
+                        <div class="detail-images">
+                            ${Array(item.images).fill(0).map((_, i) => `
+                                <img src="https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=${encodeURIComponent(prompts[i % prompts.length])}&image_size=square" alt="配图${i+1}">
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+
+            const priorityText = { high: '高', medium: '中', low: '低' };
+            const priorityColor = { high: '#ff4757', medium: '#fa8c16', low: '#52c41a' };
+
+            body.innerHTML = `
+                <div class="detail-section">
+                    <div class="detail-label">内容标题：</div>
+                    <div class="detail-value" style="font-size:16px;font-weight:600;">${item.title}</div>
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+                    <div class="detail-section">
+                        <div class="detail-label">内容ID：</div>
+                        <div class="detail-value">#${item.id}</div>
+                    </div>
+                    <div class="detail-section">
+                        <div class="detail-label">内容类型：</div>
+                        <div class="detail-value"><span class="type-tag">${item.type}</span></div>
+                    </div>
+                    <div class="detail-section">
+                        <div class="detail-label">审核状态：</div>
+                        <div class="detail-value"><span class="status-tag status-${item.status}">${statusTexts[item.status]}</span></div>
+                    </div>
+                    <div class="detail-section">
+                        <div class="detail-label">优先级：</div>
+                        <div class="detail-value" style="color:${priorityColor[item.priority]};font-weight:600;">${priorityText[item.priority]}优先级</div>
+                    </div>
+                    <div class="detail-section">
+                        <div class="detail-label">提交作者：</div>
+                        <div class="detail-value">
+                            <div class="author-info">
+                                <div class="author-avatar" style="background: ${getAvatarColor(item.author.name)}">
+                                    ${item.author.name.charAt(0)}
+                                </div>
+                                <div>
+                                    <div class="author-name">${item.author.name}</div>
+                                    <div class="author-id">${item.author.id}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="detail-section">
+                        <div class="detail-label">提交时间：</div>
+                        <div class="detail-value">${item.submitTime}</div>
+                    </div>
+                    <div class="detail-section">
+                        <div class="detail-label">浏览量：</div>
+                        <div class="detail-value">${item.views.toLocaleString()} 次</div>
+                    </div>
+                    <div class="detail-section">
+                        <div class="detail-label">点赞数：</div>
+                        <div class="detail-value">${item.likes.toLocaleString()} 次</div>
+                    </div>
+                </div>
+                ${imagesHtml}
+                <div class="detail-section">
+                    <div class="detail-label">内容正文：</div>
+                    <div class="detail-value detail-content">${item.content.replace(/\n/g, '<br>')}</div>
+                </div>
+            `;
+            openModal('detailModal');
+        }
+
+        // 弹窗控制
+        function openModal(id) {
+            document.getElementById(id).classList.add('show');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.remove('show');
+            document.body.style.overflow = '';
+        }
+
+        // 点击遮罩关闭弹窗
+        document.querySelectorAll('.modal-overlay').forEach(overlay => {
+            overlay.addEventListener('click', function(e) {
+                if (e.target === this) {
+                    this.classList.remove('show');
+                    document.body.style.overflow = '';
+                }
+            });
+        });
+
+        // 更新统计数据
+        function updateStats() {
+            document.getElementById('statPending').textContent = reviewData.filter(d => d.status === 'pending').length;
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('statToday').textContent = reviewData.filter(d => {
+                const dDate = d.submitTime.split(' ')[0];
+                return dDate === today && (d.status === 'approved' || d.status === 'rejected');
+            }).length || 56;
+            document.getElementById('statApproved').textContent = reviewData.filter(d => d.status === 'approved').length;
+            document.getElementById('statRejected').textContent = reviewData.filter(d => d.status === 'rejected').length;
+        }
+
+        /* ============================================================
+         * 模块：用户申请审核（读取 localStorage，与 user-portal.html 同步）
+         * ============================================================ */
+        const UA_STORAGE = 'review_system_applications';
+        let uaAllApps = [];
+        let uaFilteredApps = [];
+        let uaCurrentPage = 1;
+        const UA_PAGE_SIZE = 10;
+        let uaSelectedIds = new Set();
+        let uaCurrentDetailId = null;
+        let uaGlobalSearchTimer = null;
+
+        function uaReadStorage() {
+            try { return JSON.parse(_lsGet(UA_STORAGE, '[]')); }
+            catch(e) { return []; }
+        }
+        function uaWriteStorage(data) {
+            _lsSet(UA_STORAGE, JSON.stringify(data));
+        }
+
+        function uaLoadAll() {
+            uaAllApps = uaReadStorage();
+            uaFilteredApps = [...uaAllApps];
+            uaCurrentPage = 1;
+            uaUpdateStats();
+            uaRenderTable();
+        }
+
+        function uaUpdateStats() {
+            const pending = uaAllApps.filter(a => a.status === 'pending').length;
+            const reviewing = uaAllApps.filter(a => a.status === 'reviewing').length;
+            const approved = uaAllApps.filter(a => a.status === 'approved').length;
+            const rejected = uaAllApps.filter(a => a.status === 'rejected').length;
+            document.getElementById('uaStatPending').textContent = pending;
+            document.getElementById('uaStatReviewing').textContent = reviewing;
+            document.getElementById('uaStatApproved').textContent = approved;
+            document.getElementById('uaStatRejected').textContent = rejected;
+
+            const badge = document.getElementById('uaSideBadge');
+            if (pending > 0) { badge.style.display = ''; badge.textContent = pending; }
+            else badge.style.display = 'none';
+        }
+
+        function uaRenderTable() {
+            const tbody = document.getElementById('uaTableBody');
+            const start = (uaCurrentPage - 1) * UA_PAGE_SIZE;
+            const end = start + UA_PAGE_SIZE;
+            const pageData = uaFilteredApps.slice(start, end);
+
+            const statusText = { pending:'待审核', reviewing:'审核中', approved:'已通过', rejected:'未通过' };
+            const priorityText = { normal:'普通', urgent:'加急', emergency:'特急' };
+            const priorityColor = { normal:'#52c41a', urgent:'#fa8c16', emergency:'#ff4757' };
+
+            if (pageData.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;padding:50px;color:#999;">
+                    <div style="font-size:40px;margin-bottom:10px;">📭</div>
+                    暂无申请数据。请打开 <a onclick="window.open('user-portal.html','_blank')" style="color:#667eea;cursor:pointer;text-decoration:underline;">用户申请中心</a> 注册账号并提交申请。
+                </td></tr>`;
+            } else {
+                tbody.innerHTML = pageData.map(app => `
+                    <tr>
+                        <td><input type="checkbox" class="ua-row-checkbox" ${uaSelectedIds.has(app.id) ? 'checked' : ''} onchange="uaToggleSelect('${app.id}')"></td>
+                        <td style="font-family:monospace;color:#667eea;">${app.id}</td>
+                        <td>
+                            <div style="display:flex;align-items:center;gap:8px;">
+                                <div style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;font-size:12px;display:flex;align-items:center;justify-content:center;font-weight:600;">
+                                    ${(app.username || 'U').charAt(0).toUpperCase()}
+                                </div>
+                                <div>
+                                    <div style="font-size:13px;">${app.username || '未知'}</div>
+                                    <div style="font-size:11px;color:#999;">${app.email || ''}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td><span class="type-tag">${app.type || '—'}</span></td>
+                        <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${app.title || ''}">${app.title || ''}</td>
+                        <td style="color:${priorityColor[app.priority] || '#666'};font-weight:600;font-size:13px;">${priorityText[app.priority] || '普通'}</td>
+                        <td><span class="status-tag status-${app.status}">${statusText[app.status] || app.status}</span></td>
+                        <td style="color:#888;font-size:13px;">${app.submitTime ? app.submitTime.split(' ')[0] : '—'}</td>
+                        <td>
+                            <div class="row-actions">
+                                <span class="action-link" onclick="uaShowDetail('${app.id}')">详情</span>
+                                ${(app.status === 'pending' || app.status === 'reviewing') ? `
+                                    <span class="action-link approve" onclick="uaApprove('${app.id}')">通过</span>
+                                    <span class="action-link reject" onclick="uaOpenReject('${app.id}')">拒绝</span>
+                                ` : ''}
+                            </div>
+                        </td>
+                    </tr>
+                `).join('');
+            }
+            uaRenderPagination();
+        }
+
+        function uaRenderPagination() {
+            const total = uaFilteredApps.length;
+            const totalPages = Math.ceil(total / UA_PAGE_SIZE);
+            document.getElementById('uaPaginationInfo').textContent = `共 ${total} 条记录，第 ${uaCurrentPage}/${totalPages || 1} 页`;
+            document.getElementById('uaPrevBtn').disabled = uaCurrentPage === 1;
+            document.getElementById('uaNextBtn').disabled = uaCurrentPage >= totalPages;
+
+            const container = document.getElementById('uaPageNumbers');
+            let html = '';
+            const maxShow = 5;
+            let startP = Math.max(1, uaCurrentPage - 2);
+            let endP = Math.min(totalPages, startP + maxShow - 1);
+            if (endP - startP < maxShow - 1) startP = Math.max(1, endP - maxShow + 1);
+            if (startP > 1) {
+                html += `<button class="page-btn" onclick="uaGoToPage(1)">1</button>`;
+                if (startP > 2) html += `<span style="padding:0 5px;">...</span>`;
+            }
+            for (let i = startP; i <= endP; i++) {
+                html += `<button class="page-btn ${i === uaCurrentPage ? 'active' : ''}" onclick="uaGoToPage(${i})">${i}</button>`;
+            }
+            if (endP < totalPages) {
+                if (endP < totalPages - 1) html += `<span style="padding:0 5px;">...</span>`;
+                html += `<button class="page-btn" onclick="uaGoToPage(${totalPages})">${totalPages}</button>`;
+            }
+            container.innerHTML = html;
+        }
+
+        function uaGoToPage(p) { uaCurrentPage = p; uaRenderTable(); }
+        function uaPrevPage() { if (uaCurrentPage > 1) uaGoToPage(uaCurrentPage - 1); }
+        function uaNextPage() {
+            const totalPages = Math.ceil(uaFilteredApps.length / UA_PAGE_SIZE);
+            if (uaCurrentPage < totalPages) uaGoToPage(uaCurrentPage + 1);
+        }
+
+        function uaApplyFilters() {
+            const type = document.getElementById('uaFilterType').value;
+            const status = document.getElementById('uaFilterStatus').value;
+            const priority = document.getElementById('uaFilterPriority').value;
+            const date = document.getElementById('uaFilterDate').value;
+            const gs = document.getElementById('globalSearch');
+            const search = gs ? gs.value.toLowerCase().trim() : '';
+
+            uaFilteredApps = uaAllApps.filter(a => {
+                if (type && a.type !== type) return false;
+                if (status && a.status !== status) return false;
+                if (priority && a.priority !== priority) return false;
+                if (date && !(a.submitTime || '').startsWith(date)) return false;
+                if (search) {
+                    const s = `${a.id} ${a.title} ${a.username} ${a.email} ${a.content}`.toLowerCase();
+                    if (!s.includes(search)) return false;
+                }
+                return true;
+            });
+            uaCurrentPage = 1;
+            uaRenderTable();
+            showToast(`筛选完成，共 ${uaFilteredApps.length} 条`, 'info');
+        }
+
+        function uaResetFilters() {
+            document.getElementById('uaFilterType').value = '';
+            document.getElementById('uaFilterStatus').value = '';
+            document.getElementById('uaFilterPriority').value = '';
+            document.getElementById('uaFilterDate').value = '';
+            const gs = document.getElementById('globalSearch');
+            if (gs) gs.value = '';
+            uaFilteredApps = [...uaAllApps];
+            uaCurrentPage = 1;
+            uaRenderTable();
+        }
+
+        function uaRefresh() {
+            uaLoadAll();
+            showToast('已同步最新用户申请', 'success');
+        }
+
+        function uaToggleSelectAll() {
+            const checked = document.getElementById('uaSelectAll').checked;
+            const start = (uaCurrentPage - 1) * UA_PAGE_SIZE;
+            const end = start + UA_PAGE_SIZE;
+            const pageData = uaFilteredApps.slice(start, end);
+            if (checked) pageData.forEach(a => uaSelectedIds.add(a.id));
+            else pageData.forEach(a => uaSelectedIds.delete(a.id));
+            uaRenderTable();
+        }
+        function uaToggleSelect(id) {
+            if (uaSelectedIds.has(id)) uaSelectedIds.delete(id);
+            else uaSelectedIds.add(id);
+        }
+
+        function uaFormatDate(d) {
+            const p = n => String(n).padStart(2, '0');
+            return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
+        }
+
+        function uaApprove(id) {
+            const apps = uaReadStorage();
+            const app = apps.find(a => a.id === id);
+            if (!app) return;
+            app.status = 'approved';
+            app.reviewTime = uaFormatDate(new Date());
+            app.reviewer = '张审核';
+            app.reviewComment = app.reviewComment || '您的申请已通过审核，感谢您的耐心等待。';
+            uaWriteStorage(apps);
+            uaLoadAll();
+            showToast(`申请 ${id} 已通过`, 'success');
+        }
+
+        function uaOpenReject(id) {
+            uaCurrentDetailId = id;
+            document.getElementById('rejectReason').value = '';
+            document.querySelectorAll('.reason-tag').forEach(t => t.classList.remove('active'));
+            openModal('rejectModal');
+            const btn = document.querySelector('#rejectModal .modal-footer .btn-danger');
+            const old = btn.onclick;
+            btn.onclick = function() {
+                uaConfirmReject();
+                setTimeout(() => btn.onclick = old, 100);
+            };
+        }
+
+        function uaConfirmReject() {
+            const reason = document.getElementById('rejectReason').value.trim();
+            if (!reason) { showToast('请填写拒绝原因', 'warning'); return; }
+            if (!uaCurrentDetailId) return;
+            const apps = uaReadStorage();
+            const app = apps.find(a => a.id === uaCurrentDetailId);
+            if (app) {
+                app.status = 'rejected';
+                app.reviewTime = uaFormatDate(new Date());
+                app.reviewer = '张审核';
+                app.reviewComment = reason;
+                uaWriteStorage(apps);
+                uaLoadAll();
+                showToast(`申请 ${uaCurrentDetailId} 已拒绝`, 'error');
+            }
+            closeModal('rejectModal');
+        }
+
+        function uaBatchApprove() {
+            if (uaSelectedIds.size === 0) { showToast('请先选择申请', 'warning'); return; }
+            const apps = uaReadStorage();
+            let count = 0;
+            apps.forEach(a => {
+                if (uaSelectedIds.has(a.id) && (a.status === 'pending' || a.status === 'reviewing')) {
+                    a.status = 'approved';
+                    a.reviewTime = uaFormatDate(new Date());
+                    a.reviewer = '张审核';
+                    a.reviewComment = a.reviewComment || '您的申请已通过审核。';
+                    count++;
+                }
+            });
+            uaWriteStorage(apps);
+            uaSelectedIds.clear();
+            uaLoadAll();
+            showToast(`批量通过 ${count} 份申请`, 'success');
+        }
+
+        function uaBatchReject() {
+            if (uaSelectedIds.size === 0) { showToast('请先选择申请', 'warning'); return; }
+            uaCurrentDetailId = null;
+            document.getElementById('rejectReason').value = '';
+            document.querySelectorAll('.reason-tag').forEach(t => t.classList.remove('active'));
+            const btn = document.querySelector('#rejectModal .modal-footer .btn-danger');
+            const old = btn.onclick;
+            btn.onclick = function() {
+                const reason = document.getElementById('rejectReason').value.trim();
+                if (!reason) { showToast('请填写拒绝原因', 'warning'); return; }
+                const apps = uaReadStorage();
+                let count = 0;
+                apps.forEach(a => {
+                    if (uaSelectedIds.has(a.id) && (a.status === 'pending' || a.status === 'reviewing')) {
+                        a.status = 'rejected';
+                        a.reviewTime = uaFormatDate(new Date());
+                        a.reviewer = '张审核';
+                        a.reviewComment = reason;
+                        count++;
+                    }
+                });
+                uaWriteStorage(apps);
+                uaSelectedIds.clear();
+                uaLoadAll();
+                showToast(`批量拒绝 ${count} 份申请`, 'error');
+                closeModal('rejectModal');
+                setTimeout(() => btn.onclick = old, 100);
+            };
+            openModal('rejectModal');
+        }
+
+        function uaShowDetail(id) {
+            uaCurrentDetailId = id;
+            const apps = uaReadStorage();
+            const app = apps.find(a => a.id === id);
+            if (!app) return;
+
+            const statusText = { pending:'待审核', reviewing:'审核中', approved:'已通过', rejected:'未通过' };
+            const priorityText = { normal:'普通', urgent:'加急', emergency:'特急' };
+            const priorityColor = { normal:'#52c41a', urgent:'#fa8c16', emergency:'#ff4757' };
+
+            let feedback = '';
+            if (app.status === 'approved') {
+                feedback = `<div style="background:#f6ffed;border-left:3px solid #52c41a;padding:14px;border-radius:0 8px 8px 0;margin-top:10px;">
+                    <div style="font-size:12px;color:#888;margin-bottom:4px;">✅ 审核通过 · ${app.reviewer || '管理员'} · ${app.reviewTime || ''}</div>
+                    <div>${app.reviewComment || '您的申请已通过审核。'}</div>
+                </div>`;
+            } else if (app.status === 'rejected') {
+                feedback = `<div style="background:#fff1f0;border-left:3px solid #ff4757;padding:14px;border-radius:0 8px 8px 0;margin-top:10px;">
+                    <div style="font-size:12px;color:#888;margin-bottom:4px;">❌ 审核未通过 · ${app.reviewer || '管理员'} · ${app.reviewTime || ''}</div>
+                    <div>${app.reviewComment || '未填写原因'}</div>
+                </div>`;
+            }
+
+            let attachments = '';
+            if (app.attachments && app.attachments.length > 0) {
+                attachments = `<div class="detail-section">
+                    <div class="detail-label">附件 (${app.attachments.length})</div>
+                    <div class="detail-content">${app.attachments.map(f => `📄 ${f.name} (${(f.size/1024).toFixed(1)} KB)`).join('<br>')}</div>
+                </div>`;
+            }
+
+            const detailBody = document.getElementById('detailBody');
+            detailBody.innerHTML = `
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+                    <div class="detail-section"><div class="detail-label">申请编号</div><div class="detail-value" style="font-family:monospace;color:#667eea;">${app.id}</div></div>
+                    <div class="detail-section"><div class="detail-label">申请类型</div><div class="detail-value"><span class="type-tag">${app.type || '—'}</span></div></div>
+                    <div class="detail-section"><div class="detail-label">审核状态</div><div class="detail-value"><span class="status-tag status-${app.status}">${statusText[app.status] || app.status}</span></div></div>
+                    <div class="detail-section"><div class="detail-label">紧急程度</div><div class="detail-value" style="color:${priorityColor[app.priority] || '#666'};font-weight:600;">${priorityText[app.priority] || '普通'}</div></div>
+                    <div class="detail-section"><div class="detail-label">申请人</div><div class="detail-value">${app.username || '—'} <span style="color:#999;">(${app.userId || ''})</span></div></div>
+                    <div class="detail-section"><div class="detail-label">联系邮箱</div><div class="detail-value">${app.email || '—'}</div></div>
+                    <div class="detail-section"><div class="detail-label">提交时间</div><div class="detail-value">${app.submitTime || '—'}</div></div>
+                    <div class="detail-section"><div class="detail-label">联系电话</div><div class="detail-value">${app.contactPhone || '—'}</div></div>
+                </div>
+                <div class="detail-section"><div class="detail-label">申请标题</div><div class="detail-value" style="font-weight:600;">${app.title || '—'}</div></div>
+                <div class="detail-section"><div class="detail-label">申请内容</div><div class="detail-content" style="white-space:pre-wrap;">${app.content || '—'}</div></div>
+                ${attachments}
+                ${feedback}
+            `;
+
+            const footer = document.querySelector('#detailModal .modal-footer');
+            footer.innerHTML = `
+                <button class="btn btn-default" onclick="closeModal('detailModal')">关闭</button>
+                ${(app.status === 'pending' || app.status === 'reviewing') ? `
+                    <button class="btn btn-danger" onclick="uaRejectFromDetail()">拒绝</button>
+                    <button class="btn btn-success" onclick="uaApproveFromDetail()">通过</button>
+                ` : ''}
+            `;
+            openModal('detailModal');
+        }
+
+        function uaApproveFromDetail() {
+            if (!uaCurrentDetailId) return;
+            uaApprove(uaCurrentDetailId);
+            closeModal('detailModal');
+        }
+        function uaRejectFromDetail() {
+            if (!uaCurrentDetailId) return;
+            uaOpenReject(uaCurrentDetailId);
+        }
+
+        // 内容审核详情页需要恢复原底部按钮
+        const _origShowDetail = window.showDetail;
+        window.showDetail = function(id) {
+            if (typeof _origShowDetail === 'function') _origShowDetail(id);
+            setTimeout(() => {
+                if (document.getElementById('breadcrumbText').textContent === '内容审核') {
+                    const footer = document.querySelector('#detailModal .modal-footer');
+                    if (footer) {
+                        footer.innerHTML = `
+                            <button class="btn btn-default" onclick="closeModal('detailModal')">关闭</button>
+                            <button class="btn btn-danger" onclick="rejectFromDetail()">拒绝</button>
+                            <button class="btn btn-success" onclick="approveFromDetail()">通过</button>
+                        `;
+                    }
+                }
+            }, 10);
+        };
+
+        // 后台初始化：也可以放几条演示申请（第一次访问无数据时）
+        if (uaReadStorage().length === 0) {
+            // 预留：不主动塞数据，让用户从 user-portal 端提交
+        }
+        // 初始加载一次（用于徽章显示）
+        uaLoadAll();
+
+        // 每 5 秒同步一次，检测用户端提交的新申请或状态变化
+        setInterval(() => {
+            const crumb = document.getElementById('breadcrumbText').textContent;
+            const latest = uaReadStorage();
+            if (crumb === '用户申请审核') {
+                const changed =
+                    latest.length !== uaAllApps.length ||
+                    latest.some((a, i) => !uaAllApps[i] ||
+                        a.status !== uaAllApps[i].status ||
+                        a.reviewComment !== uaAllApps[i].reviewComment);
+                if (changed) uaLoadAll();
+            } else {
+                const pending = latest.filter(a => a.status === 'pending').length;
+                const badge = document.getElementById('uaSideBadge');
+                if (pending > 0) { badge.style.display = ''; badge.textContent = pending; }
+                else badge.style.display = 'none';
+            }
+        }, 5000);
+
+        /* ============================================================
+         * 模块：管理员登录 / 注册 / 权限 / 角色审核 / 复审处理
+         * ============================================================ */
+        // 内存 fallback（file:// 协议 / 隐私模式 / localStorage 禁用时，保证单页数据可用）
+        window.__REVIEW_MEM__ = window.__REVIEW_MEM__ || {};
+        function _lsGet(k, def) {
+            try { const v = localStorage.getItem(k); return v === null ? def : v; }
+            catch(e) { const mv = window.__REVIEW_MEM__[k]; return mv === undefined ? def : mv; }
+        }
+        function _lsSet(k, v) {
+            try { localStorage.setItem(k, v); return true; }
+            catch(e) { window.__REVIEW_MEM__[k] = v; return false; }
+        }
+        function _lsRemove(k) {
+            try { localStorage.removeItem(k); }
+            catch(e) { delete window.__REVIEW_MEM__[k]; }
+        }
+        const ADM_USERS_KEY = 'review_system_admins';
+        const ADM_CURR_KEY  = 'review_system_current_admin';
+
+        // 状态文本扩展
+        const UA_STATUS_TEXT = {
+            pending:'待审核', reviewing:'审核中', approved:'已通过', rejected:'未通过',
+            're-reviewing':'复审中', rejected_final:'终审拒绝', withdrawn:'已撤回'
+        };
+        const AM_STATUS_TEXT = {
+            pending:'待审核', active:'已激活', rejected:'已拒绝', disabled:'已禁用'
+        };
+        const AM_ROLE_TEXT = { super_admin:'超级管理员', admin:'普通管理员' };
+
+        /* --------- Storage helpers --------- */
+        function amRead() {
+            try { return JSON.parse(_lsGet(ADM_USERS_KEY, '[]')); }
+            catch(e) { return []; }
+        }
+        function amWrite(list) { _lsSet(ADM_USERS_KEY, JSON.stringify(list)); }
+        function amCurr() {
+            try { return JSON.parse(_lsGet(ADM_CURR_KEY, 'null')); }
+            catch(e) { return null; }
+        }
+        function amSetCurr(u) {
+            if (u) _lsSet(ADM_CURR_KEY, JSON.stringify(u));
+            else   _lsRemove(ADM_CURR_KEY);
+        }
+        function amNow() {
+            const p = n => String(n).padStart(2,'0');
+            const d = new Date();
+            return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
+        }
+        // 取当前登录管理员名称（给审核人字段赋值）
+        function currentReviewerName() {
+            const c = amCurr();
+            return c ? (c.realname || c.username) : '系统管理员';
+        }
+
+        /* --------- 内置超级管理员种子（防脏数据：始终确保账号可用） --------- */
+        function ensureBuiltinAdmins() {
+            try {
+                const BUILTINS = [
+                    { username:'superadmin', password:'123456',   email:'super@example.com', realname:'超级管理员' },
+                    { username:'momo',       password:'Zt198692', email:'momo@example.com',  realname:'momo（超级管理员）' }
+                ];
+                const list = amRead();
+                let changed = false;
+                BUILTINS.forEach(b => {
+                    let builtin = list.find(u => u.username === b.username);
+                    if (!builtin) {
+                        // 不存在才新增
+                        list.push({
+                            id: 'A' + Date.now() + '_' + b.username,
+                            username: b.username,
+                            email: b.email,
+                            realname: b.realname,
+                            password: b.password,
+                            role: 'super_admin',
+                            status: 'active',
+                            createdAt: amNow(),
+                            reviewTime: amNow(),
+                            reviewer: 'SYSTEM',
+                            reviewComment: '系统内置超级管理员'
+                        });
+                        changed = true;
+                    } else {
+                        // 存在但状态/密码被篡改 → 重置，确保永远能登上
+                        if (builtin.status !== 'active')       { builtin.status = 'active'; changed = true; }
+                        if (builtin.role   !== 'super_admin')  { builtin.role = 'super_admin'; changed = true; }
+                        if (builtin.password !== b.password)   { builtin.password = b.password; changed = true; }
+                        if (!builtin.email)                    { builtin.email = b.email; changed = true; }
+                        if (!builtin.realname)                 { builtin.realname = b.realname; changed = true; }
+                    }
+                });
+                if (changed) amWrite(list);
+            } catch(e) { /* 静默失败，不阻断后续脚本 */ }
+        }
+        // 页面加载时立即执行一次
+        ensureBuiltinAdmins();
+
+        /* --------- 登录罩层控制 --------- */
+        function admHideAuth() { document.getElementById('adminAuthPage').classList.add('hide'); }
+        function admShowAuth() { document.getElementById('adminAuthPage').classList.remove('hide'); }
+
+        function admSwitchTab(tab) {
+            document.getElementById('admTabLogin').classList.toggle('active', tab==='login');
+            document.getElementById('admTabReg').classList.toggle('active', tab==='register');
+            document.getElementById('admLoginForm').classList.toggle('active', tab==='login');
+            document.getElementById('admRegForm').classList.toggle('active', tab==='register');
+            document.querySelectorAll('.admin-form-error').forEach(e=>{e.classList.remove('show');e.textContent='';});
+        }
+        function admTogglePwd(el) {
+            const inp = el.previousElementSibling;
+            if (inp.type === 'password') { inp.type = 'text'; el.textContent='🙈'; }
+            else { inp.type = 'password'; el.textContent='👁️'; }
+        }
+
+        /* --------- 注册 --------- */
+        function admHandleRegister(e) {
+            e.preventDefault();
+            const username = document.getElementById('admRegName').value.trim();
+            const email = document.getElementById('admRegEmail').value.trim();
+            const realname = document.getElementById('admRegRealname').value.trim();
+            const pwd = document.getElementById('admRegPwd').value;
+            const pwd2 = document.getElementById('admRegPwd2').value;
+            document.querySelectorAll('.admin-form-error').forEach(e=>{e.classList.remove('show');e.textContent='';});
+
+            let ok = true;
+            const list = amRead();
+            if (list.some(u => u.username === username)) {
+                const el = document.getElementById('admRegNameErr');
+                el.textContent = '该用户名已存在'; el.classList.add('show'); ok = false;
+            }
+            if (list.some(u => u.email === email)) {
+                const el = document.getElementById('admRegEmailErr');
+                el.textContent = '该邮箱已注册'; el.classList.add('show'); ok = false;
+            }
+            if (pwd !== pwd2) {
+                const el = document.getElementById('admRegPwdErr');
+                el.textContent = '两次输入的密码不一致'; el.classList.add('show'); ok = false;
+            }
+            if (!ok) return;
+
+            list.push({
+                id: 'A' + Date.now(),
+                username, email, realname, password: pwd,
+                role: 'admin',
+                status: 'pending',
+                createdAt: amNow(),
+                reviewTime: null,
+                reviewer: null,
+                reviewComment: null
+            });
+            amWrite(list);
+            document.getElementById('admRegForm').reset();
+            setTimeout(() => admSwitchTab('login'), 400);
+        }
+
+        /* --------- 登录 --------- */
+        function admHandleLogin(e) {
+            e.preventDefault();
+            const account = document.getElementById('admLoginAccount').value.trim();
+            const pwd = document.getElementById('admLoginPwd').value;
+            const err = document.getElementById('admLoginError');
+            err.classList.remove('show');
+
+            // 登录前强制确保内置超管账号存在（双保险：即使页面加载时种子代码被中断也能补上）
+            ensureBuiltinAdmins();
+
+            const list = amRead();
+            const byAccount = list.find(u => u.username === account || u.email === account);
+            if (!byAccount) {
+                err.textContent = `账号「${account}」不存在，请先注册或确认拼写是否正确`;
+                err.classList.add('show');
+                return;
+            }
+            if (byAccount.password !== pwd) {
+                err.textContent = '密码错误，请重试（提示：内置超级管理员默认密码为 123456）';
+                err.classList.add('show');
+                return;
+            }
+            const user = byAccount;
+            if (user.status === 'pending') {
+                err.textContent = '账号还未通过超级管理员审核，无法登录'; err.classList.add('show');
+                return;
+            }
+            if (user.status === 'rejected') {
+                err.textContent = '您的注册申请已被拒绝'; err.classList.add('show');
+                return;
+            }
+            if (user.status === 'disabled') {
+                err.textContent = '账号已被禁用，请联系超级管理员'; err.classList.add('show');
+                return;
+            }
+            // 登录成功
+            amSetCurr({
+                id: user.id, username: user.username, email: user.email,
+                realname: user.realname, role: user.role
+            });
+            admHideAuth();
+            admUpdateTopbar();
+            amApplyViewVisibility();
+        }
+
+        /* --------- 退出 --------- */
+        function admLogout() {
+            if (!confirm('确定退出登录？')) return;
+            amSetCurr(null);
+            document.getElementById('admLoginForm').reset();
+            admShowAuth();
+            admUpdateTopbar();
+            amApplyViewVisibility();
+        }
+
+        /* --------- 顶部栏信息 --------- */
+        function admUpdateTopbar() {
+            const c = amCurr();
+            const avatar = document.getElementById('admTopAvatar');
+            const nameEl = document.getElementById('admTopName');
+            const roleEl = document.getElementById('admTopRole');
+            const logoutBtn = document.getElementById('admLogoutBtn');
+            if (!c) {
+                avatar.textContent = '?';
+                nameEl.textContent = '未登录';
+                roleEl.textContent = '请先登录';
+                logoutBtn.style.display = 'none';
+            } else {
+                avatar.textContent = (c.realname || c.username || 'A').charAt(0).toUpperCase();
+                nameEl.textContent = c.realname || c.username;
+                roleEl.textContent = AM_ROLE_TEXT[c.role] || '管理员';
+                logoutBtn.style.display = '';
+            }
+        }
+
+        /* --------- 权限守卫 --------- */
+        function guardLoggedIn() {
+            const c = amCurr();
+            if (!c) {
+                showToast('请先登录后台再执行此操作', 'error');
+                admShowAuth();
+                return false;
+            }
+            // 校验账号状态未变更
+            const list = amRead();
+            const user = list.find(u => u.id === c.id);
+            if (!user || user.status !== 'active') {
+                showToast('账号状态异常，请重新登录', 'error');
+                amSetCurr(null); admShowAuth(); admUpdateTopbar();
+                return false;
+            }
+            return true;
+        }
+        function guardSuperAdmin() {
+            if (!guardLoggedIn()) return false;
+            const c = amCurr();
+            if (c.role !== 'super_admin') {
+                showToast('仅超级管理员可执行此操作', 'warning');
+                return false;
+            }
+            return true;
+        }
+
+        /* --------- 视图可见性（管理员审核菜单） --------- */
+        function amApplyViewVisibility() {
+            const c = amCurr();
+            const menuItem = document.getElementById('adminMgrMenuItem');
+            if (c && c.role === 'super_admin') {
+                menuItem.style.display = '';
+                // 徽章
+                const pending = amRead().filter(u => u.status === 'pending').length;
+                const badge = document.getElementById('admMgrBadge');
+                if (pending > 0) { badge.style.display=''; badge.textContent = pending; }
+                else badge.style.display = 'none';
+            } else {
+                menuItem.style.display = 'none';
+                // 如果当前在管理员审核视图但失去权限，切回内容审核
+                if (document.getElementById('viewAdminMgr').classList.contains('active')) {
+                    switchMainView('viewReview');
+                    document.querySelectorAll('.menu-item').forEach(i => i.classList.toggle('active', i.getAttribute('data-view')==='viewReview'));
+                    document.getElementById('breadcrumbText').textContent = '内容审核';
+                }
+            }
+        }
+
+        // 统一的主视图切换函数（带权限）
+        function switchMainView(view) {
+            if (view === 'viewAdminMgr' && !guardSuperAdmin()) return;
+            document.querySelectorAll('.main-view').forEach(v => v.classList.remove('active'));
+            const t = document.getElementById(view);
+            if (t) t.classList.add('active');
+            document.getElementById('breadcrumbText').textContent =
+                ({viewReview:'内容审核', viewUserApp:'用户申请审核', viewAdminMgr:'管理员审核'})[view] || '';
+            if (view === 'viewUserApp') uaLoadAll();
+            if (view === 'viewAdminMgr') amLoadAll();
+        }
+
+        /* --------- 包装原有内容审核操作（加权限） --------- */
+        const _origApprove = window.approveItem;
+        window.approveItem = function(id) {
+            if (!guardLoggedIn()) return;
+            // 动态替换审核人
+            const item = reviewData.find(d => d.id === id);
+            if (item && typeof _origApprove === 'function') {
+                const old = window.showToast;
+                const r = _origApprove(id);
+                return r;
+            }
+        };
+        // 把内容审核的硬编码 '张审核' 改成动态（通过包装 updateStats 的审核相关函数较复杂，直接在 approveItem/batchApprove/reject 中写入时替换）
+        // 直接替换 review 相关写入时的审核人：改写 updateStats 前的 approveItem
+        // （这里使用替代方案：覆写 batchApprove / approveItem / confirmReject 里写入前替换）
+
+        // 修改内容审核 approveItem 为动态审核人（通过覆盖 localStorage 写入时机实现较难，这里简单覆盖函数）
+        window.approveItem = function(id) {
+            if (!guardLoggedIn()) return;
+            const item = reviewData.find(d => d.id === id);
+            if (item) {
+                item.status = 'approved';
+                renderTable();
+                updateStats();
+                showToast(`内容 #${id} 审核通过（审核人：${currentReviewerName()}）`, 'success');
+            }
+        };
+        window.batchApprove = function() {
+            if (!guardLoggedIn()) return;
+            if (selectedIds.size === 0) { showToast('请先选择要操作的内容', 'warning'); return; }
+            let count = 0;
+            selectedIds.forEach(id => {
+                const item = reviewData.find(d => d.id === id);
+                if (item && (item.status === 'pending' || item.status === 'reviewing')) {
+                    item.status = 'approved';
+                    count++;
+                }
+            });
+            selectedIds.clear();
+            renderTable();
+            updateStats();
+            showToast(`批量通过 ${count} 条内容（审核人：${currentReviewerName()}）`, 'success');
+        };
+        // 拒绝时也加权限（通过 openRejectModal / confirmReject 入口）
+        const _origOpenReject = window.openRejectModal;
+        window.openRejectModal = function(id) {
+            if (!guardLoggedIn()) return;
+            if (typeof _origOpenReject === 'function') _origOpenReject(id);
+        };
+        window.confirmReject = function() {
+            const reason = document.getElementById('rejectReason').value.trim();
+            if (!reason) { showToast('请填写拒绝原因', 'warning'); return; }
+            // 内容审核拒绝
+            if (currentDetailId) {
+                if (!guardLoggedIn()) return;
+                const item = reviewData.find(d => d.id === currentDetailId);
+                if (item) {
+                    item.status = 'rejected';
+                    renderTable();
+                    updateStats();
+                    showToast(`内容 #${currentDetailId} 已拒绝（审核人：${currentReviewerName()}）`, 'error');
+                }
+            }
+            closeModal('rejectModal');
+            closeModal('detailModal');
+        };
+        window.batchReject = function() {
+            if (!guardLoggedIn()) return;
+            if (selectedIds.size === 0) { showToast('请先选择要操作的内容', 'warning'); return; }
+            // 直接打开拒绝原因弹，复用按钮逻辑
+            document.getElementById('rejectReason').value = '';
+            document.querySelectorAll('.reason-tag').forEach(t => t.classList.remove('active'));
+            const btn = document.querySelector('#rejectModal .modal-footer .btn-danger');
+            const prev = btn.onclick;
+            btn.onclick = function() {
+                const reason = document.getElementById('rejectReason').value.trim();
+                if (!reason) { showToast('请填写拒绝原因', 'warning'); return; }
+                let count = 0;
+                selectedIds.forEach(id => {
+                    const item = reviewData.find(d => d.id === id);
+                    if (item && (item.status === 'pending' || item.status === 'reviewing')) {
+                        item.status = 'rejected'; count++;
+                    }
+                });
+                selectedIds.clear();
+                renderTable();
+                updateStats();
+                showToast(`批量拒绝 ${count} 条内容（审核人：${currentReviewerName()}）`, 'error');
+                closeModal('rejectModal');
+                btn.onclick = prev;
+            };
+            openModal('rejectModal');
+        };
+
+        /* --------- UA（用户申请审核）复审处理 & 权限包装 --------- */
+        const _uaApprove = uaApprove;
+        uaApprove = function(id) {
+            if (!guardLoggedIn()) return;
+            const apps = uaReadStorage();
+            const app = apps.find(a => a.id === id);
+            if (!app) return;
+            // 如果是复审中 -> 通过则直接 approved
+            const isRetry = app.status === 're-reviewing';
+            app.status = 'approved';
+            app.reviewTime = amNow();
+            app.reviewer = currentReviewerName();
+            if (isRetry) {
+                app.reviewComment = '复审通过。' + (app.reviewComment || '');
+            } else {
+                app.reviewComment = app.reviewComment || '您的申请已通过审核，感谢您的耐心等待。';
+            }
+            uaWriteStorage(apps);
+            uaLoadAll();
+            showToast(isRetry ? `复审通过：${id}` : `申请 ${id} 已通过`, 'success');
+        };
+        // UA 拒绝（普通拒绝/reviewing拒绝/retry 拒绝=终审拒绝）
+        function uaConfirmRejectOverride() {
+            const reason = document.getElementById('rejectReason').value.trim();
+            if (!reason) { showToast('请填写拒绝原因', 'warning'); return; }
+            if (!guardLoggedIn()) return;
+            if (!uaCurrentDetailId) { closeModal('rejectModal'); return; }
+            const apps = uaReadStorage();
+            const app = apps.find(a => a.id === uaCurrentDetailId);
+            if (app) {
+                const isRetry = app.status === 're-reviewing';
+                app.status = isRetry ? 'rejected_final' : 'rejected';
+                app.reviewTime = amNow();
+                app.reviewer = currentReviewerName();
+                app.reviewComment = reason;
+                uaWriteStorage(apps);
+                uaLoadAll();
+                showToast(isRetry ? `终审拒绝：${uaCurrentDetailId}` : `申请 ${uaCurrentDetailId} 已拒绝`, 'error');
+            }
+            closeModal('rejectModal');
+        }
+        // uaOpenReject 内的确认按钮改成 override
+        const _uaOpenReject = uaOpenReject;
+        uaOpenReject = function(id) {
+            if (!guardLoggedIn()) return;
+            uaCurrentDetailId = id;
+            document.getElementById('rejectReason').value = '';
+            document.querySelectorAll('.reason-tag').forEach(t => t.classList.remove('active'));
+            openModal('rejectModal');
+            const btn = document.querySelector('#rejectModal .modal-footer .btn-danger');
+            const prev = btn.onclick;
+            btn.onclick = function() {
+                uaConfirmRejectOverride();
+                setTimeout(() => btn.onclick = prev, 100);
+            };
+        };
+        // 批量通过/拒绝 UA
+        const _uaBatchApprove = uaBatchApprove;
+        uaBatchApprove = function() {
+            if (!guardLoggedIn()) return;
+            if (uaSelectedIds.size === 0) { showToast('请先选择申请', 'warning'); return; }
+            const apps = uaReadStorage();
+            let count = 0;
+            apps.forEach(a => {
+                if (uaSelectedIds.has(a.id) && (['pending','reviewing','re-reviewing'].includes(a.status))) {
+                    const isRetry = a.status === 're-reviewing';
+                    a.status = 'approved';
+                    a.reviewTime = amNow();
+                    a.reviewer = currentReviewerName();
+                    if (isRetry) a.reviewComment = '复审通过。' + (a.reviewComment || '');
+                    else a.reviewComment = a.reviewComment || '您的申请已通过审核。';
+                    count++;
+                }
+            });
+            uaWriteStorage(apps);
+            uaSelectedIds.clear();
+            uaLoadAll();
+            showToast(`批量通过 ${count} 份申请（审核人：${currentReviewerName()}）`, 'success');
+        };
+        const _uaBatchReject = uaBatchReject;
+        uaBatchReject = function() {
+            if (!guardLoggedIn()) return;
+            if (uaSelectedIds.size === 0) { showToast('请先选择申请', 'warning'); return; }
+            uaCurrentDetailId = null;
+            document.getElementById('rejectReason').value = '';
+            document.querySelectorAll('.reason-tag').forEach(t => t.classList.remove('active'));
+            const btn = document.querySelector('#rejectModal .modal-footer .btn-danger');
+            const prev = btn.onclick;
+            btn.onclick = function() {
+                const reason = document.getElementById('rejectReason').value.trim();
+                if (!reason) { showToast('请填写拒绝原因', 'warning'); return; }
+                if (!guardLoggedIn()) return;
+                const apps = uaReadStorage();
+                let count = 0;
+                apps.forEach(a => {
+                    if (uaSelectedIds.has(a.id) && (['pending','reviewing','re-reviewing'].includes(a.status))) {
+                        const isRetry = a.status === 're-reviewing';
+                        a.status = isRetry ? 'rejected_final' : 'rejected';
+                        a.reviewTime = amNow();
+                        a.reviewer = currentReviewerName();
+                        a.reviewComment = reason;
+                        count++;
+                    }
+                });
+                uaWriteStorage(apps);
+                uaSelectedIds.clear();
+                uaLoadAll();
+                showToast(`批量拒绝 ${count} 份申请（审核人：${currentReviewerName()}）`, 'error');
+                closeModal('rejectModal');
+                setTimeout(() => btn.onclick = prev, 100);
+            };
+            openModal('rejectModal');
+        };
+
+        // UA 详情：显示复审原因、状态文案；底部按钮显示"通过复审"/"终审拒绝"
+        const _origUaShowDetail = uaShowDetail;
+        uaShowDetail = function(id) {
+            if (!guardLoggedIn()) return;
+            uaCurrentDetailId = id;
+            const apps = uaReadStorage();
+            const app = apps.find(a => a.id === id);
+            if (!app) return;
+            const priorityText = { normal:'普通', urgent:'加急', emergency:'特急' };
+            const priorityColor = { normal:'#52c41a', urgent:'#fa8c16', emergency:'#ff4757' };
+
+            let feedback = '';
+            if (app.status === 'approved') {
+                feedback = `<div style="background:#f6ffed;border-left:3px solid #52c41a;padding:14px;border-radius:0 8px 8px 0;margin-top:10px;">
+                    <div style="font-size:12px;color:#888;margin-bottom:4px;">✅ 审核通过 · ${app.reviewer || '管理员'} · ${app.reviewTime || ''}</div>
+                    <div>${app.reviewComment || '您的申请已通过审核，感谢您的耐心等待。'}</div></div>`;
+            } else if (app.status === 'rejected') {
+                feedback = `<div style="background:#fff1f0;border-left:3px solid #ff4757;padding:14px;border-radius:0 8px 8px 0;margin-top:10px;">
+                    <div style="font-size:12px;color:#888;margin-bottom:4px;">❌ 一审未通过 · ${app.reviewer || '管理员'} · ${app.reviewTime || ''}</div>
+                    <div>${app.reviewComment || '未填写原因'}</div></div>`;
+            } else if (app.status === 'rejected_final') {
+                feedback = `<div style="background:#ffe8e8;border-left:3px solid #d32f2f;padding:14px;border-radius:0 8px 8px 0;margin-top:10px;">
+                    <div style="font-size:12px;color:#888;margin-bottom:4px;">⛔ 终审拒绝 · ${app.reviewer || '管理员'} · ${app.reviewTime || ''}</div>
+                    <div>${app.reviewComment || '未填写原因'}</div></div>`;
+            } else if (app.status === 'withdrawn') {
+                feedback = `<div style="background:#f5f5f5;border-left:3px solid #999;padding:14px;border-radius:0 8px 8px 0;margin-top:10px;">
+                    <div style="font-size:12px;color:#888;margin-bottom:4px;">↩️ 用户已撤回 · ${app.withdrawTime || ''}</div>
+                    <div>${app.withdrawReason || ''}</div></div>`;
+            } else if (app.status === 're-reviewing') {
+                feedback = `<div style="background:#e6f7ff;border-left:3px solid #2f54eb;padding:14px;border-radius:0 8px 8px 0;margin-top:10px;">
+                    <div style="font-size:12px;color:#888;margin-bottom:4px;">🔄 复审中 · 用户申请复审 ${app.retryTime || ''}</div>
+                    <div><b>复审理由：</b>${app.retryReason || ''}</div></div>`;
+            } else if (app.status === 'reviewing') {
+                feedback = `<div style="background:#e6f7ff;border-left:3px solid #1890ff;padding:14px;border-radius:0 8px 8px 0;margin-top:10px;">
+                    <div style="font-size:12px;color:#888;margin-bottom:4px;">🔍 一审审核中</div>
+                    <div>请尽快处理或置为待审核</div></div>`;
+            } else {
+                feedback = `<div style="background:#fff7e6;border-left:3px solid #fa8c16;padding:14px;border-radius:0 8px 8px 0;margin-top:10px;">
+                    <div style="font-size:12px;color:#888;margin-bottom:4px;">⏳ 待审核</div>
+                    <div>用户已提交，等待一审处理</div></div>`;
+            }
+
+            let attachments = '';
+            if (app.attachments && app.attachments.length > 0) {
+                attachments = `<div class="detail-section">
+                    <div class="detail-label">附件 (${app.attachments.length})</div>
+                    <div class="detail-content">${app.attachments.map(f => `📄 ${f.name} (${(f.size/1024).toFixed(1)} KB)`).join('<br>')}</div>
+                </div>`;
+            }
+
+            // 是否需要操作按钮
+            const canReview = ['pending','reviewing'].includes(app.status);
+            const canRetryReview = app.status === 're-reviewing';
+
+            const detailBody = document.getElementById('detailBody');
+            detailBody.innerHTML = `
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+                    <div class="detail-section"><div class="detail-label">申请编号</div><div class="detail-value" style="font-family:monospace;color:#667eea;">${app.id}</div></div>
+                    <div class="detail-section"><div class="detail-label">申请类型</div><div class="detail-value"><span class="type-tag">${app.type || '—'}</span></div></div>
+                    <div class="detail-section"><div class="detail-label">审核状态</div><div class="detail-value"><span class="status-tag status-${app.status}">${UA_STATUS_TEXT[app.status] || app.status}</span></div></div>
+                    <div class="detail-section"><div class="detail-label">紧急程度</div><div class="detail-value" style="color:${priorityColor[app.priority] || '#666'};font-weight:600;">${priorityText[app.priority] || '普通'}</div></div>
+                    <div class="detail-section"><div class="detail-label">申请人</div><div class="detail-value">${app.username || '—'} <span style="color:#999;">(${app.userId || ''})</span></div></div>
+                    <div class="detail-section"><div class="detail-label">联系邮箱</div><div class="detail-value">${app.email || '—'}</div></div>
+                    <div class="detail-section"><div class="detail-label">提交时间</div><div class="detail-value">${app.submitTime || '—'}</div></div>
+                    <div class="detail-section"><div class="detail-label">联系电话</div><div class="detail-value">${app.contactPhone || '—'}</div></div>
+                </div>
+                <div class="detail-section"><div class="detail-label">申请标题</div><div class="detail-value" style="font-weight:600;">${app.title || '—'}</div></div>
+                <div class="detail-section"><div class="detail-label">申请内容</div><div class="detail-content" style="white-space:pre-wrap;">${app.content || '—'}</div></div>
+                ${attachments}
+                ${feedback}
+            `;
+
+            const footer = document.querySelector('#detailModal .modal-footer');
+            if (canRetryReview) {
+                footer.innerHTML = `
+                    <button class="btn btn-default" onclick="closeModal('detailModal')">关闭</button>
+                    <button class="btn btn-danger" onclick="uaRejectFromDetail()">终审拒绝</button>
+                    <button class="btn btn-success" onclick="uaApproveFromDetail()">通过复审</button>
+                `;
+            } else if (canReview) {
+                footer.innerHTML = `
+                    <button class="btn btn-default" onclick="closeModal('detailModal')">关闭</button>
+                    <button class="btn btn-danger" onclick="uaRejectFromDetail()">拒绝</button>
+                    <button class="btn btn-success" onclick="uaApproveFromDetail()">通过</button>
+                `;
+            } else {
+                footer.innerHTML = `<button class="btn btn-default" onclick="closeModal('detailModal')">关闭</button>`;
+            }
+            openModal('detailModal');
+        };
+
+        // UA 列表渲染也扩展状态文本和复审按钮显示
+        const _origUaRender = uaRenderTable;
+        uaRenderTable = function() {
+            const tbody = document.getElementById('uaTableBody');
+            const start = (uaCurrentPage - 1) * UA_PAGE_SIZE;
+            const end = start + UA_PAGE_SIZE;
+            const pageData = uaFilteredApps.slice(start, end);
+
+            const priorityText = { normal:'普通', urgent:'加急', emergency:'特急' };
+            const priorityColor = { normal:'#52c41a', urgent:'#fa8c16', emergency:'#ff4757' };
+
+            if (pageData.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;padding:50px;color:#999;">
+                    <div style="font-size:40px;margin-bottom:10px;">📭</div>
+                    暂无申请数据。请打开 <a onclick="window.open('user-portal.html','_blank')" style="color:#667eea;cursor:pointer;text-decoration:underline;">用户申请中心</a> 注册账号并提交申请。
+                </td></tr>`;
+            } else {
+                tbody.innerHTML = pageData.map(app => {
+                    const canReview = ['pending','reviewing'].includes(app.status);
+                    const canRetry = app.status === 're-reviewing';
+                    let actions = `<span class="action-link" onclick="uaShowDetail('${app.id}')">详情</span>`;
+                    if (canRetry) {
+                        actions += `
+                            <span class="action-link approve" onclick="uaApprove('${app.id}')">通过复审</span>
+                            <span class="action-link reject" onclick="uaOpenReject('${app.id}')">终审拒绝</span>`;
+                    } else if (canReview) {
+                        actions += `
+                            <span class="action-link approve" onclick="uaApprove('${app.id}')">通过</span>
+                            <span class="action-link reject" onclick="uaOpenReject('${app.id}')">拒绝</span>`;
+                    }
+                    return `
+                    <tr>
+                        <td><input type="checkbox" class="ua-row-checkbox" ${uaSelectedIds.has(app.id) ? 'checked' : ''} onchange="uaToggleSelect('${app.id}')" ${(canReview||canRetry)?'':'disabled'}></td>
+                        <td style="font-family:monospace;color:#667eea;">${app.id}</td>
+                        <td>
+                            <div style="display:flex;align-items:center;gap:8px;">
+                                <div style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;font-size:12px;display:flex;align-items:center;justify-content:center;font-weight:600;">
+                                    ${(app.username || 'U').charAt(0).toUpperCase()}
+                                </div>
+                                <div>
+                                    <div style="font-size:13px;">${app.username || '未知'}</div>
+                                    <div style="font-size:11px;color:#999;">${app.email || ''}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td><span class="type-tag">${app.type || '—'}</span></td>
+                        <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${app.title || ''}">${app.title || ''}</td>
+                        <td style="color:${priorityColor[app.priority] || '#666'};font-weight:600;font-size:13px;">${priorityText[app.priority] || '普通'}</td>
+                        <td><span class="status-tag status-${app.status}">${UA_STATUS_TEXT[app.status] || app.status}</span></td>
+                        <td style="color:#888;font-size:13px;">${app.submitTime ? app.submitTime.split(' ')[0] : '—'}</td>
+                        <td><div class="row-actions">${actions}</div></td>
+                    </tr>`;
+                }).join('');
+            }
+            uaRenderPagination();
+        };
+
+        /* --------- 管理员审核视图（viewAdminMgr）逻辑 --------- */
+        let amAll = [];
+        let amFiltered = [];
+        let amPage = 1;
+        const AM_PAGE = 10;
+
+        function amLoadAll() {
+            if (!guardSuperAdmin()) return;
+            amAll = amRead();
+            amApplyFilter(true);
+            // 更新徽章
+            const pending = amAll.filter(u => u.status === 'pending').length;
+            const badge = document.getElementById('admMgrBadge');
+            if (pending > 0) { badge.style.display=''; badge.textContent = pending; }
+            else badge.style.display = 'none';
+        }
+        function amApplyFilter(skipGuard) {
+            if (!skipGuard && !guardSuperAdmin()) return;
+            const s = document.getElementById('amFilterStatus').value;
+            const r = document.getElementById('amFilterRole').value;
+            const kw = (document.getElementById('amFilterKw').value || '').toLowerCase().trim();
+            amFiltered = amAll.filter(u => {
+                if (s && u.status !== s) return false;
+                if (r && u.role !== r) return false;
+                if (kw) {
+                    const str = `${u.username} ${u.email} ${u.realname||''}`.toLowerCase();
+                    if (!str.includes(kw)) return false;
+                }
+                return true;
+            });
+            amPage = 1;
+            amUpdateStats();
+            amRender();
+        }
+        function amResetFilter() {
+            document.getElementById('amFilterStatus').value = '';
+            document.getElementById('amFilterRole').value = '';
+            document.getElementById('amFilterKw').value = '';
+            amApplyFilter(true);
+        }
+        function amUpdateStats() {
+            document.getElementById('amStatPending').textContent = amAll.filter(u => u.status === 'pending').length;
+            document.getElementById('amStatSuper').textContent   = amAll.filter(u => u.role === 'super_admin' && u.status === 'active').length;
+            document.getElementById('amStatAdmin').textContent   = amAll.filter(u => u.role === 'admin' && u.status === 'active').length;
+            document.getElementById('amStatRejected').textContent= amAll.filter(u => u.status === 'rejected').length;
+        }
+        function amRender() {
+            const tbody = document.getElementById('amTableBody');
+            const start = (amPage - 1) * AM_PAGE;
+            const end = start + AM_PAGE;
+            const page = amFiltered.slice(start, end);
+
+            if (page.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:50px;color:#999;">暂无数据</td></tr>`;
+            } else {
+                tbody.innerHTML = page.map(u => {
+                    const curr = amCurr();
+                    const isSelf = curr && curr.id === u.id;
+                    const statusClass = u.status === 'pending' ? 'status-pending' :
+                                        u.status === 'active' ? 'status-approved' :
+                                        u.status === 'rejected' ? 'status-rejected' : 'status-withdrawn';
+                    const roleClass = u.role === 'super_admin' ? 'status-reviewing' : 'type-tag';
+                    const canApprove = u.status === 'pending' && !isSelf;
+                    const canDisable = u.status === 'active' && u.role !== 'super_admin' && !isSelf;
+                    const canReject  = u.status === 'pending' && !isSelf;
+                    return `<tr>
+                        <td style="font-weight:600;">${u.username}</td>
+                        <td>${u.email}</td>
+                        <td>${u.realname || '—'}</td>
+                        <td><span class="${roleClass}">${AM_ROLE_TEXT[u.role] || u.role}</span></td>
+                        <td><span class="status-tag ${statusClass}">${AM_STATUS_TEXT[u.status] || u.status}</span></td>
+                        <td style="color:#888;font-size:13px;">${u.createdAt ? u.createdAt.split(' ')[0] : '—'}</td>
+                        <td style="color:#888;font-size:13px;">${u.reviewTime ? u.reviewTime.split(' ')[0] : '—'}</td>
+                        <td>
+                            <div class="row-actions">
+                                ${canApprove ? `<span class="action-link approve" onclick="amApprove('${u.id}')">通过注册</span>` : ''}
+                                ${canReject  ? `<span class="action-link reject"  onclick="amReject('${u.id}')">拒绝注册</span>` : ''}
+                                ${canDisable ? `<span class="action-link" style="color:#666;" onclick="amDisable('${u.id}')">禁用</span>` : ''}
+                                ${u.status === 'disabled' && u.role !== 'super_admin' && !isSelf ? `<span class="action-link approve" onclick="amEnable('${u.id}')">启用</span>` : ''}
+                            </div>
+                        </td>
+                    </tr>`;
+                }).join('');
+            }
+            // 分页
+            const total = amFiltered.length;
+            const totalPages = Math.ceil(total / AM_PAGE);
+            document.getElementById('amPaginationInfo').textContent = `共 ${total} 条记录，第 ${amPage}/${totalPages||1} 页`;
+            document.getElementById('amPrevBtn').disabled = amPage === 1;
+            document.getElementById('amNextBtn').disabled = amPage >= totalPages;
+
+            const container = document.getElementById('amPageNumbers');
+            let html = '';
+            const maxShow = 5;
+            let sp = Math.max(1, amPage - 2);
+            let ep = Math.min(totalPages, sp + maxShow - 1);
+            if (ep - sp < maxShow - 1) sp = Math.max(1, ep - maxShow + 1);
+            if (sp > 1) {
+                html += `<button class="page-btn" onclick="amGoTo(1)">1</button>`;
+                if (sp > 2) html += `<span style="padding:0 5px;">...</span>`;
+            }
+            for (let i = sp; i <= ep; i++)
+                html += `<button class="page-btn ${i===amPage?'active':''}" onclick="amGoTo(${i})">${i}</button>`;
+            if (ep < totalPages) {
+                if (ep < totalPages - 1) html += `<span style="padding:0 5px;">...</span>`;
+                html += `<button class="page-btn" onclick="amGoTo(${totalPages})">${totalPages}</button>`;
+            }
+            container.innerHTML = html;
+        }
+        function amGoTo(p) { amPage = p; amRender(); }
+        function amPrevPage() { if (amPage > 1) amGoTo(amPage - 1); }
+        function amNextPage() {
+            const tp = Math.ceil(amFiltered.length / AM_PAGE);
+            if (amPage < tp) amGoTo(amPage + 1);
+        }
+        function amApprove(id) {
+            if (!guardSuperAdmin()) return;
+            const list = amRead();
+            const u = list.find(x => x.id === id);
+            if (!u || u.status !== 'pending') return;
+            if (u.role === 'super_admin') { showToast('不能修改内置超级管理员的审核状态', 'error'); return; }
+            u.status = 'active';
+            u.role = u.role || 'admin';
+            u.reviewTime = amNow();
+            u.reviewer = currentReviewerName();
+            u.reviewComment = '注册已通过，欢迎加入审核团队。';
+            amWrite(list);
+            amLoadAll();
+            showToast(`已通过账号「${u.username}」的注册申请`, 'success');
+        }
+        function amReject(id) {
+            if (!guardSuperAdmin()) return;
+            const reason = prompt('请输入拒绝原因（将记录到系统中）：', '资料不全或不符合要求');
+            if (reason === null) return;
+            const list = amRead();
+            const u = list.find(x => x.id === id);
+            if (!u || u.status !== 'pending') return;
+            if (u.role === 'super_admin') { showToast('不能拒绝内置超级管理员的注册', 'error'); return; }
+            u.status = 'rejected';
+            u.reviewTime = amNow();
+            u.reviewer = currentReviewerName();
+            u.reviewComment = reason || '未填写原因';
+            amWrite(list);
+            amLoadAll();
+            showToast(`已拒绝账号「${u.username}」的注册申请`, 'error');
+        }
+        function amDisable(id) {
+            if (!guardSuperAdmin()) return;
+            if (!confirm('确定要禁用该账号吗？禁用后将无法登录。')) return;
+            const list = amRead();
+            const u = list.find(x => x.id === id);
+            if (!u) return;
+            if (u.role === 'super_admin') { showToast('不能禁用内置超级管理员账号', 'error'); return; }
+            u.status = 'disabled';
+            u.reviewTime = amNow();
+            u.reviewer = currentReviewerName();
+            amWrite(list);
+            amLoadAll();
+            showToast(`账号「${u.username}」已禁用`, 'warning');
+        }
+        function amEnable(id) {
+            if (!guardSuperAdmin()) return;
+            const list = amRead();
+            const u = list.find(x => x.id === id);
+            if (!u) return;
+            if (u.role === 'super_admin') { showToast('不能启用内置超级管理员（它永远处于激活状态）', 'error'); return; }
+            u.status = 'active';
+            u.reviewTime = amNow();
+            u.reviewer = currentReviewerName();
+            amWrite(list);
+            amLoadAll();
+            showToast(`账号「${u.username}」已重新启用`, 'success');
+        }
+
+        // 侧边栏菜单点击统一走 switchMainView（克隆替换清除旧监听器）
+        document.querySelectorAll('.menu-item').forEach(item => {
+            // 克隆替换以清除旧监听器，统一使用 switchMainView
+            const clone = item.cloneNode(true);
+            item.parentNode.replaceChild(clone, item);
+            clone.addEventListener('click', function() {
+                const view = this.getAttribute('data-view');
+                if (!view) return;
+                document.querySelectorAll('.menu-item').forEach(i => i.classList.remove('active'));
+                this.classList.add('active');
+                switchMainView(view);
+            });
+        });
+
+        // 启动顺序
+        admUpdateTopbar();
+        (function bootAdmin(){
+            const c = amCurr();
+            if (c) {
+                const list = amRead();
+                const user = list.find(u => u.id === c.id && u.status === 'active');
+                if (user) {
+                    admHideAuth();
+                    amApplyViewVisibility();
+                    return;
+                } else {
+                    amSetCurr(null);
+                }
+            }
+            admShowAuth();
+        })();
+
+        // 初始化
+        renderTable();
+        updateStats();
+    </script>
+</body>
+</html>
